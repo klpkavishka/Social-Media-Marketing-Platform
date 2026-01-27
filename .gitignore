@@ -1,0 +1,196 @@
+# UniSocial Platform - Comprehensive .gitignore
+
+# ========================
+# Dependencies
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ========================
+# Build Outputs
+# ========================
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# NestJS
+dist/
+build/
+
+# ========================
+# IDE & Editors
+# ========================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ========================
+# OS Files
+# ========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ========================
+# Testing
+# ========================
+coverage/
+*.lcov
+.nyc_output/
+.jest-cache/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ========================
+# Databases
+# ========================
+*.sqlite
+*.sqlite3
+*.db
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Temporary Files
+# ========================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ========================
+# Media Uploads (local development)
+# ========================
+uploads/
+media/
+public/uploads/
+
+# ========================
+# Package Manager
+# ========================
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ========================
+# Documentation (generated)
+# ========================
+docs/api/generated/
+
+# ========================
+# Security & Keys
+# ========================
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+.secrets/
+
+# ========================
+# Terraform
+# ========================
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# ========================
+# Kubernetes
+# ========================
+kubeconfig
+
+# ========================
+# AI/ML
+# ========================
+models/
+*.h5
+*.pkl
+*.joblib
+*.onnx
+checkpoints/
+
+# ========================
+# Misc
+# ========================
+.vercel
+.turbo
+.cache
+.parcel-cache
