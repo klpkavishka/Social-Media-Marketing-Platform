@@ -147,7 +147,7 @@ export default function ContentPage() {
                   </span>
                 </div>
                 <div className="mt-2 flex gap-1 flex-wrap">
-                  {content.platforms?.map((platform) => (
+                  {content.platforms?.map((platform: string) => (
                     <Badge key={platform} variant="outline" className="text-xs">
                       {platform}
                     </Badge>

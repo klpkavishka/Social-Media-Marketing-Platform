@@ -59,4 +59,4 @@ async def predict(file: UploadFile = File(...)):
 
     ms = round((time.time() - start) * 1000, 2)
     logger.info(f"⏱️ Total time: {ms}ms")
-    return {**result, "processing_ms": ms, "caption": ""}
+    return {**result, "processing_ms": ms}

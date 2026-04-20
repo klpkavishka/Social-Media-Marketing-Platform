@@ -1,8 +1,10 @@
-import os, json, pickle
+import os, json, pickle, logging
 import numpy as np
 from PIL import Image
 import tensorflow as tf
 from keras.models import load_model
+
+logger = logging.getLogger(__name__)
 
 class HashtagPredictor:
     def __init__(self):
@@ -13,7 +15,19 @@ class HashtagPredictor:
         with open(os.path.join(base, "hashtag_db_v2.json"), "r") as f:
             self.hashtag_db = json.load(f)
         self.img_size = 224
-        print(f"Model loaded — classes: {list(self.le.classes_)}")
+        print(f"Hashtag model loaded — classes: {list(self.le.classes_)}")
+
+        # ── Load caption model (graceful — works without it) ──────────
+        self.caption_predictor = None
+        try:
+            from model.caption_predictor import caption_predictor
+            self.caption_predictor = caption_predictor
+            if caption_predictor.ready:
+                logger.info("✅ Caption predictor integrated into HashtagPredictor")
+            else:
+                logger.warning("⚠️  Caption predictor loaded but NOT ready (missing tokenizer?)")
+        except Exception as e:
+            logger.warning(f"⚠️  Caption predictor not available: {e}")
 
     def preprocess(self, image: Image.Image):
         image = image.convert("RGB").resize((self.img_size, self.img_size))
@@ -53,6 +67,17 @@ class HashtagPredictor:
                 if tag not in seen:
                     tags.append(tag); seen.add(tag)
 
+        # ── Generate caption using the caption model ──────────────────
+        caption = ""
+        if self.caption_predictor and self.caption_predictor.ready:
+            try:
+                logger.info("🤖 Generating image caption...")
+                caption = self.caption_predictor.predict(image, method="beam")
+                logger.info(f"📝 Caption generated: {caption}")
+            except Exception as e:
+                logger.error(f"❌ Caption generation failed: {e}", exc_info=True)
+                caption = ""
+
         return {
             "category":     top_cat,
             "confidence":   top_conf,
@@ -60,6 +85,7 @@ class HashtagPredictor:
             "top3":         top3,
             "hashtags":     ["#" + t for t in tags[:20]],
             "hashtag_count": len(tags[:20]),
+            "caption":      caption,
         }
 
 predictor = HashtagPredictor()   # loads once at import time

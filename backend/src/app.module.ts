@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BullModule } from '@nestjs/bull';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerModule } from './common/logger/logger.module';
-import { dataSourceOptions } from './data-source';
 
 // Feature Modules
 import { AuthModule } from './modules/auth/auth.module';
@@ -57,6 +57,19 @@ import { HashtagsModule } from './modules/hashtags/hashtags.module';
         uri: configService.get<string>('MONGODB_URI', 'mongodb://localhost:27017/unisocial-analytics'),
         retryAttempts: 3,
         retryDelay: 3000,
+      }),
+      inject: [ConfigService],
+    }),
+
+    // Bull Queue configuration (Redis)
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST', 'localhost'),
+          port: configService.get('REDIS_PORT', 6379),
+          password: configService.get('REDIS_PASSWORD'),
+        },
       }),
       inject: [ConfigService],
     }),

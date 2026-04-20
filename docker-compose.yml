@@ -1,32 +1,166 @@
 version: '3.8'
 
 services:
+  # ===== DATABASES =====
   postgres:
     image: postgres:16-alpine
     container_name: postgres
+    environment:
+      POSTGRES_DB: socialapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_DB:       socialapp
-      POSTGRES_USER:     user
-      POSTGRES_PASSWORD: password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d socialapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   mongodb:
     image: mongo:7-jammy
     container_name: mongodb
+    environment:
+      MONGO_INITDB_DATABASE: socialapp
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   redis:
     image: redis:7-alpine
     container_name: redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ===== APPLICATION SERVICES =====
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ai-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-service:/app
+      - /app/__pycache__
+    environment:
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: user
+      DB_PASSWORD: password
+      DB_DATABASE: socialapp
+      
+      # MongoDB
+      MONGODB_URI: mongodb://mongodb:27017/socialapp
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      
+      # JWT
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRES_IN: 1d
+      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
+      JWT_REFRESH_EXPIRES_IN: 7d
+      
+      # AI Service
+      AI_SERVICE_URL: http://ai-service:8000
+      
+      # Frontend
+      FRONTEND_URL: http://localhost:3000,http://localhost
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        AUTH0_SECRET: 58f580f3ece3b756b42516201e92ec6568bbee4d00dae0b26ea812f383f85be7
+        AUTH0_DOMAIN: dev-b76bgxwc5qrqaf63.us.auth0.com
+        AUTH0_CLIENT_ID: 7ovg42eUCq37SHK7u289S6hvnyXz7WLK
+        AUTH0_CLIENT_SECRET: FEvFSe3FCwtU1MTOixNoa6qhgw-s1ZEXjuK-iTlBzvxYNGDARjczGrn6aFwFcybE
+        AUTH0_AUDIENCE: https://api.smehardware.com
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://backend:4000
+      NEXT_PUBLIC_WS_URL: ws://backend:4000
+      BACKEND_URL: http://backend:4000
+      NEXT_PUBLIC_APP_NAME: UniSocial
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_ENABLE_AI_FEATURES: "true"
+      NEXT_PUBLIC_ENABLE_ANALYTICS: "true"
+      
+      # Auth0 Runtime Configuration
+      AUTH0_SECRET: 58f580f3ece3b756b42516201e92ec6568bbee4d00dae0b26ea812f383f85be7
+      AUTH0_DOMAIN: dev-b76bgxwc5qrqaf63.us.auth0.com
+      AUTH0_CLIENT_ID: 7ovg42eUCq37SHK7u289S6hvnyXz7WLK
+      AUTH0_CLIENT_SECRET: FEvFSe3FCwtU1MTOixNoa6qhgw-s1ZEXjuK-iTlBzvxYNGDARjczGrn6aFwFcybE
+      AUTH0_AUDIENCE: https://api.smehardware.com
+      APP_BASE_URL: http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   mongo_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
