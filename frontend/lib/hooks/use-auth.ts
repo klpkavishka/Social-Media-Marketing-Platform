@@ -1,52 +1,46 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { authApi, LoginCredentials, RegisterData } from '@/lib/api/auth'
-import { useAuthStore } from '@/lib/stores/auth-store'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
+'use client'
+
+import { useUser } from '@auth0/nextjs-auth0/client'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function useAuth() {
-  const { user, isAuthenticated, setAuth, clearAuth } = useAuthStore()
-  const router = useRouter()
+  const { user, error, isLoading } = useUser()
   const queryClient = useQueryClient()
 
-  const loginMutation = useMutation({
-    mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
-    onSuccess: (response) => {
-      setAuth(response.data.user, response.data.access_token)
-      toast.success('Login successful!')
-      router.push('/dashboard')
-    },
-    onError: () => {
-      toast.error('Invalid credentials')
-    },
-  })
+  const login = (returnTo?: string) => {
+    const url = returnTo
+      ? `/auth/login?returnTo=${encodeURIComponent(returnTo)}`
+      : '/auth/login'
+    window.location.href = url
+  }
 
-  const registerMutation = useMutation({
-    mutationFn: (data: RegisterData) => authApi.register(data),
-    onSuccess: (response) => {
-      setAuth(response.data.user, response.data.access_token)
-      toast.success('Account created successfully!')
-      router.push('/dashboard')
-    },
-    onError: () => {
-      toast.error('Registration failed')
-    },
-  })
+  const signup = () => {
+    window.location.href = '/auth/login?screen_hint=signup'
+  }
 
   const logout = () => {
-    clearAuth()
     queryClient.clear()
-    router.push('/login')
-    toast.success('Logged out successfully')
+    window.location.href = '/auth/logout'
   }
 
   return {
-    user,
-    isAuthenticated,
-    login: loginMutation.mutate,
-    register: registerMutation.mutate,
+    user: user
+      ? {
+          id: user.sub || '',
+          email: user.email || '',
+          firstName: (user.given_name as string || user.name?.split(' ')[0]) || '',
+          lastName: (user.family_name as string || user.name?.split(' ').slice(1).join(' ')) || '',
+          name: user.name || '',
+          avatarUrl: user.picture || '',
+          role: (user['https://unisocial.com/roles'] as string) || 'viewer',
+          status: 'active',
+        }
+      : null,
+    isAuthenticated: !!user,
+    isLoading,
+    error,
+    login,
+    signup,
     logout,
-    isLoggingIn: loginMutation.isPending,
-    isRegistering: registerMutation.isPending,
   }
 }

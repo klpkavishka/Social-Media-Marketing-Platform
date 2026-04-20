@@ -1,0 +1,212 @@
+import { MetricData, PlatformStats } from '../types/analytics'
+
+// Mock data for analytics - will be replaced with API calls later
+export const mockMetricsData = {
+  totalEngagement: {
+    value: 45200,
+    change: 25,
+    trend: 'up' as const,
+    data: [
+      { date: '2026-02-08', value: 3200 },
+      { date: '2026-02-15', value: 3800 },
+      { date: '2026-02-22', value: 4100 },
+      { date: '2026-03-01', value: 5200 },
+      { date: '2026-03-08', value: 6100 },
+    ] as MetricData[],
+  },
+  totalReach: {
+    value: 125600,
+    change: 18,
+    trend: 'up' as const,
+    data: [
+      { date: '2026-02-08', value: 18200 },
+      { date: '2026-02-15', value: 21800 },
+      { date: '2026-02-22', value: 24100 },
+      { date: '2026-03-01', value: 28200 },
+      { date: '2026-03-08', value: 33300 },
+    ] as MetricData[],
+  },
+  totalFollowers: {
+    value: 15420,
+    change: 12,
+    trend: 'up' as const,
+    data: [
+      { date: '2026-02-08', value: 13200 },
+      { date: '2026-02-15', value: 13800 },
+      { date: '2026-02-22', value: 14200 },
+      { date: '2026-03-01', value: 14800 },
+      { date: '2026-03-08', value: 15420 },
+    ] as MetricData[],
+  },
+  avgEngagementRate: {
+    value: 4.8,
+    change: 8,
+    trend: 'up' as const,
+    data: [
+      { date: '2026-02-08', value: 4.2 },
+      { date: '2026-02-15', value: 4.4 },
+      { date: '2026-02-22', value: 4.5 },
+      { date: '2026-03-01', value: 4.6 },
+      { date: '2026-03-08', value: 4.8 },
+    ] as MetricData[],
+  },
+}
+
+export const mockPlatformStats: PlatformStats[] = [
+  {
+    platform: 'Instagram',
+    posts: 85,
+    engagement: 18500,
+    reach: 52300,
+    followers: 6200,
+    engagementRate: 5.2,
+  },
+  {
+    platform: 'Facebook',
+    posts: 72,
+    engagement: 12400,
+    reach: 38200,
+    followers: 4800,
+    engagementRate: 4.1,
+  },
+  {
+    platform: 'Twitter',
+    posts: 58,
+    engagement: 9800,
+    reach: 22100,
+    followers: 2900,
+    engagementRate: 5.8,
+  },
+  {
+    platform: 'LinkedIn',
+    posts: 30,
+    engagement: 4500,
+    reach: 13000,
+    followers: 1520,
+    engagementRate: 3.9,
+  },
+]
+
+export const mockEngagementByType = [
+  { label: 'Likes', value: 28500, percentage: 63 },
+  { label: 'Comments', value: 8200, percentage: 18 },
+  { label: 'Shares', value: 5800, percentage: 13 },
+  { label: 'Clicks', value: 2700, percentage: 6 },
+]
+
+export const mockTopPosts = [
+  {
+    id: '1',
+    platform: 'Instagram',
+    content: 'Summer product launch! 🚀 Check out our new collection...',
+    image: '/images/placeholder-post1.jpg',
+    engagement: 5200,
+    reach: 18500,
+    likes: 4800,
+    comments: 320,
+    shares: 80,
+    timestamp: '2026-03-05T14:30:00Z',
+  },
+  {
+    id: '2',
+    platform: 'Twitter',
+    content: 'Behind the scenes of our latest campaign 🎬 #Marketing',
+    image: '/images/placeholder-post2.jpg',
+    engagement: 3800,
+    reach: 12200,
+    likes: 3200,
+    comments: 520,
+    shares: 80,
+    timestamp: '2026-03-03T10:15:00Z',
+  },
+  {
+    id: '3',
+    platform: 'Facebook',
+    content: 'Join us for an exclusive webinar this Friday!',
+    image: '/images/placeholder-post3.jpg',
+    engagement: 2900,
+    reach: 9800,
+    likes: 2400,
+    comments: 380,
+    shares: 120,
+    timestamp: '2026-03-01T16:45:00Z',
+  },
+  {
+    id: '4',
+    platform: 'LinkedIn',
+    content: "Excited to announce our Q1 results and what's ahead...",
+    image: '/images/placeholder-post4.jpg',
+    engagement: 2100,
+    reach: 7200,
+    likes: 1800,
+    comments: 250,
+    shares: 50,
+    timestamp: '2026-02-28T09:20:00Z',
+  },
+]
+
+export const mockAudienceData = {
+  demographics: {
+    ageGroups: [
+      { label: '18-24', value: 18 },
+      { label: '25-34', value: 42 },
+      { label: '35-44', value: 24 },
+      { label: '45-54', value: 11 },
+      { label: '55+', value: 5 },
+    ],
+    gender: [
+      { label: 'Female', value: 58 },
+      { label: 'Male', value: 40 },
+      { label: 'Other', value: 2 },
+    ],
+  },
+  topLocations: [
+    { country: 'United States', percentage: 45, followers: 6939 },
+    { country: 'United Kingdom', percentage: 18, followers: 2776 },
+    { country: 'Canada', percentage: 12, followers: 1850 },
+    { country: 'Australia', percentage: 8, followers: 1234 },
+    { country: 'Germany', percentage: 6, followers: 925 },
+  ],
+  activeHours: [
+    { hour: '00:00', value: 5 },
+    { hour: '03:00', value: 3 },
+    { hour: '06:00', value: 8 },
+    { hour: '09:00', value: 35 },
+    { hour: '12:00', value: 52 },
+    { hour: '15:00', value: 48 },
+    { hour: '18:00', value: 68 },
+    { hour: '21:00', value: 42 },
+  ],
+}
+
+export const mockTimeSeriesData: MetricData[] = [
+  { date: '2026-02-08', value: 3200 },
+  { date: '2026-02-09', value: 3400 },
+  { date: '2026-02-10', value: 3100 },
+  { date: '2026-02-11', value: 3600 },
+  { date: '2026-02-12', value: 3800 },
+  { date: '2026-02-13', value: 4200 },
+  { date: '2026-02-14', value: 4500 },
+  { date: '2026-02-15', value: 3800 },
+  { date: '2026-02-16', value: 3900 },
+  { date: '2026-02-17', value: 4100 },
+  { date: '2026-02-18', value: 4300 },
+  { date: '2026-02-19', value: 4600 },
+  { date: '2026-02-20', value: 4800 },
+  { date: '2026-02-21', value: 5100 },
+  { date: '2026-02-22', value: 4100 },
+  { date: '2026-02-23', value: 4300 },
+  { date: '2026-02-24', value: 4500 },
+  { date: '2026-02-25', value: 4700 },
+  { date: '2026-02-26', value: 5000 },
+  { date: '2026-02-27', value: 5300 },
+  { date: '2026-02-28', value: 5600 },
+  { date: '2026-03-01', value: 5200 },
+  { date: '2026-03-02', value: 5400 },
+  { date: '2026-03-03', value: 5600 },
+  { date: '2026-03-04', value: 5800 },
+  { date: '2026-03-05', value: 6000 },
+  { date: '2026-03-06', value: 6200 },
+  { date: '2026-03-07', value: 6400 },
+  { date: '2026-03-08', value: 6100 },
+]

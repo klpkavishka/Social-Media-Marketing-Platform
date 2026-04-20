@@ -2,21 +2,28 @@ import { apiClient } from './client'
 
 export interface Content {
   id: string
-  caption: string
+  title: string
+  body: string
+  type: 'post' | 'story' | 'reel' | 'video' | 'image'
   status: 'draft' | 'scheduled' | 'published' | 'failed'
-  scheduledAt?: string
-  publishedAt?: string
+  media?: Record<string, unknown>
   platforms: string[]
-  mediaUrls: string[]
+  scheduledDate?: string
+  publishedDate?: string
+  aiSuggestions?: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateContentDto {
-  caption: string
-  platforms: string[]
-  mediaUrls?: string[]
-  scheduledAt?: string
+  title: string
+  body: string
+  type: 'post' | 'story' | 'reel' | 'video' | 'image'
+  status?: 'draft' | 'scheduled' | 'published' | 'failed'
+  media?: Record<string, unknown>
+  platforms?: string[]
+  scheduledDate?: string
+  aiSuggestions?: Record<string, unknown>
 }
 
 export const contentApi = {
@@ -24,6 +31,9 @@ export const contentApi = {
     apiClient.get<{ data: Content[]; total: number }>('/content', params),
 
   getById: (id: string) => apiClient.get<Content>(`/content/${id}`),
+
+  getCalendar: (params: { startDate: string; endDate: string }) =>
+    apiClient.get<{ data: Content[] }>('/content/calendar', params),
 
   create: (data: CreateContentDto) => apiClient.post<Content>('/content', data),
 

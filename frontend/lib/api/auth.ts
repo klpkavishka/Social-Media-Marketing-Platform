@@ -1,43 +1,26 @@
 import { apiClient } from './client'
 
-export interface LoginCredentials {
-  email: string
-  password: string
-}
-
-export interface RegisterData {
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  universityName: string
-  role: string
-}
-
-export interface AuthResponse {
-  access_token: string
-  refresh_token: string
-  user: {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-    role: string
-    universityId: string
-  }
-}
+// Auth0 handles login/register/token refresh automatically
+// These API calls are for interacting with your backend's user-related endpoints
 
 export const authApi = {
-  login: (credentials: LoginCredentials) =>
-    apiClient.post<AuthResponse>('/auth/login', credentials),
-
-  register: (data: RegisterData) =>
-    apiClient.post<AuthResponse>('/auth/register', data),
-
-  logout: () => apiClient.post('/auth/logout'),
-
-  refreshToken: (refreshToken: string) =>
-    apiClient.post<{ access_token: string }>('/auth/refresh', { refreshToken }),
-
+  // Get current user profile from backend
   me: () => apiClient.get('/auth/me'),
+
+  // Update user profile on backend
+  updateProfile: (data: {
+    firstName?: string
+    lastName?: string
+    universityName?: string
+    department?: string
+    jobTitle?: string
+  }) => apiClient.patch('/auth/profile', data),
+
+  // Sync Auth0 user with backend (called after first login)
+  syncUser: (auth0Profile: {
+    sub: string
+    email: string
+    name?: string
+    picture?: string
+  }) => apiClient.post('/auth/sync', auth0Profile),
 }

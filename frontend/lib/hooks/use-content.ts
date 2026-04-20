@@ -75,3 +75,11 @@ export function useGenerateCaption() {
     },
   })
 }
+
+export function useCalendarContent(params: { startDate: string; endDate: string }) {
+  return useQuery({
+    queryKey: ['content', 'calendar', params],
+    queryFn: () => contentApi.getCalendar(params),
+    enabled: !!params.startDate && !!params.endDate,
+  })
+}

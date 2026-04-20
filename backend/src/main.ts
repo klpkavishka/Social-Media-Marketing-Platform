@@ -1,10 +1,11 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { QueryFailedExceptionFilter } from './common/filters/query-failed.filter';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,9 +20,30 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api');
   
-  // CORS configuration
+  // CORS configuration - Allow all localhost origins (any port)
+  const allowedOrigins = configService.get('FRONTEND_URL')?.split(',').map(url => url.trim()) || [];
+  
   app.enableCors({
-    origin: configService.get('FRONTEND_URL') || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Check if origin is in the allowed list
+      if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // In development, allow all localhost origins on any port
+      if (configService.get('NODE_ENV') !== 'production') {
+        if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/)) {
+          return callback(null, true);
+        }
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   });
   
@@ -36,6 +58,10 @@ async function bootstrap() {
       },
     }),
   );
+  
+  // Global authentication guard
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
   
   // Global exception filters
   app.useGlobalFilters(

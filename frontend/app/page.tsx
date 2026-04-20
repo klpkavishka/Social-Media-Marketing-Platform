@@ -1,8 +1,40 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, BarChart3, Brain, Calendar, Users, Zap } from 'lucide-react'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
-export default function HomePage() {
+export default function LandingPage() {
+  const router = useRouter()
+  const { user, isLoading } = useUser()
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push('/dashboard')
+    }
+  }, [user, isLoading, router])
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect in progress
+  if (user) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -31,7 +63,7 @@ export default function HomePage() {
           <span className="text-primary">Management for Universities</span>
         </h1>
         <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
-          Streamline your university's social media presence with intelligent content creation,
+          Streamline your university&apos;s social media presence with intelligent content creation,
           scheduling, and analytics—all in one platform.
         </p>
         <div className="flex items-center justify-center gap-4">
@@ -42,7 +74,7 @@ export default function HomePage() {
           </Link>
           <Link href="/login">
             <Button size="lg" variant="outline">
-              Watch Demo
+              Sign In
             </Button>
           </Link>
         </div>

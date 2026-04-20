@@ -1,42 +1,16 @@
 'use client'
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
-interface User {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  role: string
-  universityId: string
-}
-
+// Simplified auth store for Auth0
+// Auth0 SDK handles session management via HTTP-only cookies
+// This store is kept for any UI-specific state that components might rely on
 interface AuthState {
-  user: User | null
-  token: string | null
-  isAuthenticated: boolean
-  setAuth: (user: User, token: string) => void
-  clearAuth: () => void
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      setAuth: (user, token) => {
-        localStorage.setItem('token', token)
-        set({ user, token, isAuthenticated: true })
-      },
-      clearAuth: () => {
-        localStorage.removeItem('token')
-        set({ user: null, token: null, isAuthenticated: false })
-      },
-    }),
-    {
-      name: 'auth-storage',
-    }
-  )
-)
+export const useAuthStore = create<AuthState>()((set) => ({
+  sidebarOpen: true,
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+}))
