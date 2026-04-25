@@ -1,8 +1,9 @@
-import { type NextRequest } from "next/server";
-import { auth0 } from "./lib/auth0";
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { auth0 } from './lib/auth0'
 
 export async function middleware(request: NextRequest) {
-  return await auth0.middleware(request);
+  return await auth0.middleware(request)
 }
 
 export const config = {
@@ -12,8 +13,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - auth/ (auth0 routes)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
-};
+}

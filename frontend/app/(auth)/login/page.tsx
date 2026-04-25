@@ -4,15 +4,51 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LogIn, Shield, Sparkles, ArrowRight } from 'lucide-react'
+import { LogIn, Shield, Sparkles, ArrowRight, AlertCircle } from 'lucide-react'
 import { useUser } from '@auth0/nextjs-auth0/client'
 
 export default function LoginPage() {
   const router = useRouter()
   const { user, isLoading } = useUser()
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') || '/dashboard'
+
+  // Check for Auth0 errors in URL
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    const errorDescription = searchParams.get('error_description')
+
+    if (errorParam) {
+      let errorMessage = 'An error occurred during the authorization flow.'
+
+      if (errorDescription) {
+        errorMessage = decodeURIComponent(errorDescription)
+      } else {
+        // Map common Auth0 error codes to user-friendly messages
+        switch (errorParam) {
+          case 'access_denied':
+            errorMessage = 'Access denied. Please check your Auth0 configuration.'
+            break
+          case 'unauthorized':
+            errorMessage = 'Unauthorized. Please verify your credentials.'
+            break
+          case 'invalid_client':
+            errorMessage = 'Invalid client configuration. Please contact support.'
+            break
+          case 'login_required':
+            errorMessage = 'Login is required to access this application.'
+            break
+          default:
+            errorMessage = `Authentication error: ${errorParam}`
+        }
+      }
+
+      setError(errorMessage)
+      console.error('Auth0 Error:', { error: errorParam, description: errorDescription })
+    }
+  }, [searchParams])
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -40,7 +76,7 @@ export default function LoginPage() {
 
   const handleLogin = () => {
     setIsRedirecting(true)
-    // Using standard Next.js path for Auth0 handler (v4 handles /auth/login)
+    // Using standard Next.js path for Auth0 handler
     window.location.href = `/auth/login?returnTo=${encodeURIComponent(returnTo)}`
   }
 
@@ -57,6 +93,23 @@ export default function LoginPage() {
 
       {/* Card */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 flex items-start gap-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 backdrop-blur-sm">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-400" />
+            <div className="flex-1">
+              <h3 className="mb-1 font-semibold text-red-200">Authentication Error</h3>
+              <p className="text-sm text-red-200/70">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="mt-3 text-xs text-red-300 transition-colors hover:text-red-200"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8 space-y-3">
           {[
             { icon: Sparkles, text: 'AI-powered content generation' },
@@ -79,8 +132,19 @@ export default function LoginPage() {
           {isRedirecting ? (
             <>
               <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               Redirecting to Auth0...
             </>

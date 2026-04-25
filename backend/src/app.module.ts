@@ -14,7 +14,6 @@ import { CampaignsModule } from './modules/campaigns/campaigns.module';
 import { ContentModule } from './modules/content/content.module';
 import { SocialModule } from './modules/social/social.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { MediaModule } from './modules/media/media.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { UniversitiesModule } from './modules/universities/universities.module';
@@ -30,7 +29,7 @@ import { HashtagsModule } from './modules/hashtags/hashtags.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     // PostgreSQL Database configuration
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -54,7 +53,10 @@ import { HashtagsModule } from './modules/hashtags/hashtags.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI', 'mongodb://localhost:27017/unisocial-analytics'),
+        uri: configService.get<string>(
+          'MONGODB_URI',
+          'mongodb://localhost:27017/unisocial-analytics',
+        ),
         retryAttempts: 3,
         retryDelay: 3000,
       }),
@@ -84,7 +86,6 @@ import { HashtagsModule } from './modules/hashtags/hashtags.module';
     ContentModule,
     SocialModule,
     AnalyticsModule,
-    MediaModule,
     NotificationsModule,
     WorkflowsModule,
     UniversitiesModule,
