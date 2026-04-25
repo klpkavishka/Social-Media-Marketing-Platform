@@ -8,15 +8,17 @@ export async function POST(request: NextRequest) {
     console.log('📝 [API Route] Received hashtag prediction request');
     console.log(`🔗 [API Route] Backend URL: ${BACKEND_URL}`);
 
-    const formData = await request.formData();
-    console.log('📦 [API Route] FormData prepared');
-
     // Forward the request to the NestJS backend
     console.log(`🚀 [API Route] Forwarding to ${BACKEND_URL}/api/hashtags/predict`);
     
     const response = await fetch(`${BACKEND_URL}/api/hashtags/predict`, {
       method: 'POST',
-      body: formData,
+      headers: {
+        'content-type': request.headers.get('content-type') || '',
+      },
+      body: request.body as unknown as BodyInit,
+      // @ts-expect-error - duplex is required for streaming request body in Node.js fetch
+      duplex: 'half',
     });
 
     console.log(`📊 [API Route] Backend responded with status: ${response.status}`);

@@ -2,46 +2,77 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Badge } from '@/components/ui/badge'
+import { Sparkles, CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { CalendarIcon, Sparkles, Upload } from 'lucide-react'
-import { toast } from 'sonner'
 import { useCreateContent } from '@/lib/hooks/use-content'
+import { ImageUploader } from '@/components/generator'
+import axios from 'axios'
 
 export default function NewContentPage() {
   const router = useRouter()
   const createContent = useCreateContent()
-  
+
   const [title, setTitle] = useState('')
+  const [caption, setCaption] = useState('')
   const [date, setDate] = useState<Date>()
   const [time, setTime] = useState('')
-  const [caption, setCaption] = useState('')
   const [platform, setPlatform] = useState('')
+  const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null)
+  const [hashtags, setHashtags] = useState<string[]>([])
   const [generating, setGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleGenerateCaption = async () => {
+    if (!selectedImage) {
+      toast.error('Please upload an image first')
+      return
+    }
+
     setGenerating(true)
     try {
-      // TODO: Call AI service
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      setCaption(
-        'Excited to share our latest campus update! 🎓 Join us for an amazing semester ahead. #UniversityLife #Education'
-      )
-      toast.success('Caption generated successfully!')
+      const form = new FormData()
+      form.append('image', selectedImage.file)
+
+      const { data } = await axios.post('/api/hashtags/predict', form)
+
+      setCaption(data.caption || `Check out this amazing content! 📸 ${data.category || ''}`)
+      if (data.hashtags) {
+        setHashtags(data.hashtags)
+      }
+      toast.success('Caption and hashtags generated successfully!')
     } catch (error) {
-      toast.error('Failed to generate caption')
+      console.error('Generation error:', error)
+      toast.error('Failed to generate caption and hashtags')
     } finally {
       setGenerating(false)
     }
+  }
+
+  const handleImageSelect = (file: File | null, preview: string) => {
+    if (!file) {
+      setSelectedImage(null)
+      setCaption('')
+      setHashtags([])
+      return
+    }
+    setSelectedImage({ file, preview })
   }
 
   const validateForm = () => {
@@ -89,7 +120,7 @@ export default function NewContentPage() {
       router.push('/dashboard/content/calendar')
     } catch (error: any) {
       console.error('Error scheduling post:', error)
-      
+
       // Extract meaningful error message
       let errorMessage = 'Failed to schedule post'
       if (error?.response?.data?.message) {
@@ -97,7 +128,7 @@ export default function NewContentPage() {
       } else if (error?.message) {
         errorMessage = error.message
       }
-      
+
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
@@ -123,7 +154,7 @@ export default function NewContentPage() {
       router.push('/dashboard/content')
     } catch (error: any) {
       console.error('Error saving draft:', error)
-      
+
       // Extract meaningful error message
       let errorMessage = 'Failed to save draft'
       if (error?.response?.data?.message) {
@@ -131,7 +162,7 @@ export default function NewContentPage() {
       } else if (error?.message) {
         errorMessage = error.message
       }
-      
+
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
@@ -142,11 +173,13 @@ export default function NewContentPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Create New Post</h1>
-        <p className="text-muted-foreground">Create and schedule content for your social media platforms</p>
+        <p className="text-muted-foreground">
+          Create and schedule content for your social media platforms
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Title</CardTitle>
@@ -165,14 +198,10 @@ export default function NewContentPage() {
               <CardTitle>Media</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex aspect-video items-center justify-center rounded-lg border-2 border-dashed">
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Click to upload or drag and drop
-                  </p>
-                </div>
-              </div>
+              <ImageUploader
+                onImageSelect={handleImageSelect}
+                selectedImage={selectedImage || undefined}
+              />
             </CardContent>
           </Card>
 
@@ -190,14 +219,39 @@ export default function NewContentPage() {
                 {generating ? 'Generating...' : 'AI Generate'}
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Textarea
                 placeholder="Write your caption here..."
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 rows={6}
               />
-              <p className="mt-2 text-xs text-muted-foreground">{caption.length} / 2200 characters</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {caption.length} / 2200 characters
+              </p>
+
+              {hashtags.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase text-muted-foreground">
+                    Generated Hashtags
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {hashtags.map((tag, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setCaption((prev) => `${prev}\n\n${hashtags.join(' ')}`)}
+                  >
+                    Add all to caption
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -246,23 +300,15 @@ export default function NewContentPage() {
 
               <div className="space-y-2">
                 <Label>Time</Label>
-                <Input 
-                  type="time" 
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
+                <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
               </div>
 
               <div className="space-y-2">
-                <Button 
-                  className="w-full" 
-                  onClick={handleSchedulePost}
-                  disabled={isSubmitting}
-                >
+                <Button className="w-full" onClick={handleSchedulePost} disabled={isSubmitting}>
                   {isSubmitting ? 'Scheduling...' : 'Schedule Post'}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={handleSaveAsDraft}
                   disabled={isSubmitting}

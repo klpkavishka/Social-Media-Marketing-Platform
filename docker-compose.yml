@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ===== DATABASES =====
@@ -60,7 +60,7 @@ services:
       dockerfile: Dockerfile
     container_name: ai-service
     ports:
-      - "8000:8000"
+      - "5001:5001"
     volumes:
       - ./ai-service:/app
       - /app/__pycache__
@@ -81,30 +81,30 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      
+
       # Database
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: user
       DB_PASSWORD: password
       DB_DATABASE: socialapp
-      
+
       # MongoDB
       MONGODB_URI: mongodb://mongodb:27017/socialapp
-      
+
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      
+
       # JWT
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       JWT_EXPIRES_IN: 1d
       JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
       JWT_REFRESH_EXPIRES_IN: 7d
-      
+
       # AI Service
-      AI_SERVICE_URL: http://ai-service:8000
-      
+      AI_SERVICE_URL: http://ai-service:5001
+
       # Frontend
       FRONTEND_URL: http://localhost:3000,http://localhost
     depends_on:
@@ -129,7 +129,7 @@ services:
         AUTH0_DOMAIN: dev-b76bgxwc5qrqaf63.us.auth0.com
         AUTH0_CLIENT_ID: 7ovg42eUCq37SHK7u289S6hvnyXz7WLK
         AUTH0_CLIENT_SECRET: FEvFSe3FCwtU1MTOixNoa6qhgw-s1ZEXjuK-iTlBzvxYNGDARjczGrn6aFwFcybE
-        AUTH0_AUDIENCE: https://api.smehardware.com
+        AUTH0_AUDIENCE: https://dev-b76bgxwc5qrqaf63.us.auth0.com/api/v2/
     container_name: frontend
     ports:
       - "3000:3000"
@@ -142,13 +142,14 @@ services:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_ENABLE_AI_FEATURES: "true"
       NEXT_PUBLIC_ENABLE_ANALYTICS: "true"
-      
+
       # Auth0 Runtime Configuration
       AUTH0_SECRET: 58f580f3ece3b756b42516201e92ec6568bbee4d00dae0b26ea812f383f85be7
       AUTH0_DOMAIN: dev-b76bgxwc5qrqaf63.us.auth0.com
       AUTH0_CLIENT_ID: 7ovg42eUCq37SHK7u289S6hvnyXz7WLK
       AUTH0_CLIENT_SECRET: FEvFSe3FCwtU1MTOixNoa6qhgw-s1ZEXjuK-iTlBzvxYNGDARjczGrn6aFwFcybE
-      AUTH0_AUDIENCE: https://api.smehardware.com
+      AUTH0_AUDIENCE: https://dev-b76bgxwc5qrqaf63.us.auth0.com/api/v2/
+      AUTH0_BASE_URL: http://localhost:3000
       APP_BASE_URL: http://localhost:3000
     depends_on:
       - backend

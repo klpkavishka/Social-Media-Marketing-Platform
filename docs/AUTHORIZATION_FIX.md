@@ -3,11 +3,13 @@
 ## ✅ What Was Fixed
 
 The "Unauthorized" popup was appearing because:
+
 1. **JWT Auth Guard** was blocking all requests without tokens
 2. **Missing Development Mode**: No fallback for unauthenticated requests
 3. **Database Not Created**: Content tables didn't exist yet
 
 **All Fixed!** Now the application:
+
 - ✅ Allows unauthenticated requests in development mode
 - ✅ Content endpoints are marked as `@Public()`
 - ✅ Better error messages and handling
@@ -19,6 +21,7 @@ The "Unauthorized" popup was appearing because:
 ### Step 1: Create .env Files
 
 **Backend** - Create `backend/.env`:
+
 ```
 NODE_ENV=development
 PORT=4000
@@ -32,9 +35,10 @@ JWT_EXPIRES_IN=1h
 ```
 
 **Frontend** - Create `frontend/.env.local`:
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8000
+NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:5001
 ```
 
 ### Step 2: Start PostgreSQL
@@ -42,14 +46,17 @@ NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8000
 Ensure PostgreSQL is running on `localhost:5432`
 
 **Windows:**
+
 - Open Services → Find "PostgreSQL" → Make sure it's running
 
 **Mac:**
+
 ```bash
 brew services start postgresql
 ```
 
 **Linux:**
+
 ```bash
 sudo systemctl start postgresql
 ```
@@ -70,6 +77,7 @@ npx typeorm migration:run -d dist/data-source.js
 ```
 
 **If migrations succeed**, you'll see:
+
 ```
 ✔ Migrations have been executed successfully
 ```
@@ -82,6 +90,7 @@ npm run start:dev
 ```
 
 **Should see:**
+
 ```
 🚀 Application is running on: http://localhost:4000/api
 ```
@@ -95,6 +104,7 @@ npm run dev
 ```
 
 **Should see:**
+
 ```
 ▲ Next.js 14.x ready on http://localhost:3000
 ```
@@ -117,6 +127,7 @@ npm run dev
 ## Quick Troubleshooting
 
 ### ❌ Still seeing "Unauthorized"
+
 ```bash
 # Make sure backend is recompiled
 cd backend
@@ -126,6 +137,7 @@ npm run start:dev
 ```
 
 ### ❌ "Cannot connect to database"
+
 ```bash
 # Check PostgreSQL is running
 # Verify connection
@@ -133,6 +145,7 @@ psql -U postgres -h localhost -d unisocial
 ```
 
 ### ❌ "Migrations failed"
+
 ```bash
 # Make sure code is compiled first
 cd backend
@@ -167,4 +180,3 @@ frontend/
 ✅ Better error handling
 
 **Production Note:** Remove `@Public()` decorators and implement real auth before deploying!
-

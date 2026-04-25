@@ -1,7 +1,6 @@
-import os, json, pickle, logging
+import os, json, pickle, logging, sys
 import numpy as np
 from PIL import Image
-import tensorflow as tf
 from keras.models import load_model
 
 logger = logging.getLogger(__name__)
@@ -10,29 +9,57 @@ class HashtagPredictor:
     def __init__(self):
         base = os.path.dirname(__file__)
         self.model      = load_model(os.path.join(base, "hashtag_model_v2.keras"))
-        with open(os.path.join(base, "label_encoder_v2.pkl"), "rb") as f:
-            self.le = pickle.load(f)
+        
+        # Load trained label encoder strictly (no mock fallback).
+        le_path = os.path.join(base, "label_encoder_v2.pkl")
+        if not os.path.exists(le_path):
+            raise FileNotFoundError(f"Label encoder not found at {le_path}")
+        try:
+            # Compatibility shim: some pickles reference numpy._core (NumPy 2 layout).
+            import numpy
+
+            if "numpy._core" not in sys.modules:
+                sys.modules["numpy._core"] = numpy.core
+            if "numpy._core.multiarray" not in sys.modules:
+                sys.modules["numpy._core.multiarray"] = numpy.core.multiarray
+
+            with open(le_path, "rb") as f:
+                self.le = pickle.load(f)
+            logger.info(f"✅ Label encoder loaded from {le_path}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to load label encoder from {le_path}: {e}") from e
+        
         with open(os.path.join(base, "hashtag_db_v2.json"), "r") as f:
             self.hashtag_db = json.load(f)
         self.img_size = 224
         print(f"Hashtag model loaded — classes: {list(self.le.classes_)}")
 
-        # ── Load caption model (graceful — works without it) ──────────
         self.caption_predictor = None
         try:
             from model.caption_predictor import caption_predictor
+
             self.caption_predictor = caption_predictor
             if caption_predictor.ready:
                 logger.info("✅ Caption predictor integrated into HashtagPredictor")
             else:
-                logger.warning("⚠️  Caption predictor loaded but NOT ready (missing tokenizer?)")
+                logger.warning("⚠️ Caption predictor loaded but not ready")
         except Exception as e:
-            logger.warning(f"⚠️  Caption predictor not available: {e}")
+            logger.error(f"❌ Caption predictor failed to initialize: {e}")
 
     def preprocess(self, image: Image.Image):
         image = image.convert("RGB").resize((self.img_size, self.img_size))
         arr   = np.array(image, dtype=np.float32)
         return np.expand_dims(arr, axis=0)
+
+    def _augment(self, tensor: np.ndarray) -> np.ndarray:
+        """Simple deterministic-free TTA without TensorFlow dependency."""
+        aug = np.array(tensor, copy=True)
+        if np.random.rand() > 0.5:
+            aug = np.flip(aug, axis=2)
+        # Brightness jitter in [0.9, 1.1]
+        factor = 0.9 + (0.2 * np.random.rand())
+        aug = np.clip(aug * factor, 0, 255)
+        return aug.astype(np.float32)
 
     def predict(self, image: Image.Image, n_tta: int = 5) -> dict:
         tensor = self.preprocess(image)
@@ -40,8 +67,7 @@ class HashtagPredictor:
         # Test-time augmentation: average 5 slightly varied predictions
         preds = []
         for _ in range(n_tta):
-            aug  = tf.image.random_flip_left_right(tensor)
-            aug  = tf.image.random_brightness(aug, 0.1)
+            aug = self._augment(tensor)
             preds.append(self.model.predict(aug, verbose=0)[0])
 
         avg = np.mean(preds, axis=0)
@@ -69,14 +95,15 @@ class HashtagPredictor:
 
         # ── Generate caption using the caption model ──────────────────
         caption = ""
+        
         if self.caption_predictor and self.caption_predictor.ready:
-            try:
-                logger.info("🤖 Generating image caption...")
-                caption = self.caption_predictor.predict(image, method="beam")
-                logger.info(f"📝 Caption generated: {caption}")
-            except Exception as e:
-                logger.error(f"❌ Caption generation failed: {e}", exc_info=True)
-                caption = ""
+            logger.info("🤖 Generating caption with trained model...")
+            caption = self.caption_predictor.predict(image, method="beam")
+            logger.info(f"📝 Model output: {caption}")
+        else:
+            logger.warning("⚠️ Caption model not available")
+        
+        logger.info(f"✅ Final caption: {caption}")
 
         return {
             "category":     top_cat,

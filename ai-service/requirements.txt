@@ -1,9 +1,12 @@
 fastapi==0.115.0
 uvicorn==0.32.0
-tensorflow==2.17.0
-keras==3.6.0
-numpy==1.26.4
+tensorflow==2.15.0
+keras
+numpy==1.24.3
 pillow==10.4.0
 python-multipart==0.0.12
 pydantic==2.9.0
 scikit-learn==1.5.2
+h5py==3.11.0
+optree==0.18.0
+rich==14.1.0

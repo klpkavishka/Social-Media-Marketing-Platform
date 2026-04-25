@@ -931,7 +931,7 @@ Docker Compose:
 - PostgreSQL (port 5432)
 - MongoDB (port 27017)
 - Redis (port 6379)
-- AI Service (port 8000)
+- AI Service (port 5001)
 ```
 
 ### 6.2 Production Environment (Kubernetes)

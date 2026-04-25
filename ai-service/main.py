@@ -30,9 +30,16 @@ def health():
 async def predict(file: UploadFile = File(...)):
     logger.info(f"📥 Received upload: {file.filename} (type: {file.content_type})")
     
-    if file.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+    # Relaxed validation: check for common image types OR trust filename extension if type is None
+    allowed_types = {"image/jpeg", "image/png", "image/webp"}
+    is_valid_type = file.content_type in allowed_types or file.content_type is None
+    
+    if not is_valid_type:
         logger.warning(f"❌ Invalid content type: {file.content_type}")
         raise HTTPException(400, f"Unsupported type: {file.content_type}")
+    
+    if file.content_type is None:
+        logger.info(f"ℹ️ Content type is None, trusting filename: {file.filename}")
 
     contents = await file.read()
     logger.info(f"📦 File size: {len(contents)} bytes")

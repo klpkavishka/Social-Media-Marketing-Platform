@@ -1,0 +1,27 @@
+{
+  "vocab_size": 8780,
+  "img_size": 224,
+  "feature_dim": 1280,
+  "max_length": 37,
+  "embed_dim": 768,
+  "lstm_units": 768,
+  "dense_units": 768,
+  "dropout_rate": 0.2,
+  "batch_size": 96,
+  "model": "EfficientNetB0 + BiLSTM + Attention (v2)",
+  "model_improvements": [
+    "Attention layers for focus on relevant words",
+    "Increased capacity: embed_dim=768, lstm_units=768",
+    "Cosine annealing learning rate schedule",
+    "5-layer fusion network with residuals",
+    "Keras 3.x compatible SimpleTokenizer",
+    "Image-text attention mechanism",
+    "Target accuracy: 75%+ (vs 56% baseline)"
+  ],
+  "training_process": "Keras 3.x compatible training",
+  "training_data": "Flickr8k Dataset (filtered 2-12 word captions)",
+  "tokenizer_source": "ImageCaptionModel3.ipynb - SimpleTokenizer",
+  "tokenizer_compatibility": "Keras 3.x compatible (no keras.preprocessing dependency)",
+  "optimization": "Adam + L2 regularization + Cosine Annealing LR",
+  "status": "Production ready for caption generation"
+}
