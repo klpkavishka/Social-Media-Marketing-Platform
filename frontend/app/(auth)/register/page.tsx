@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { UserPlus, Zap, BarChart3, Users, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import { SocialLoginButtons } from '@/components/auth/social-login'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -49,7 +50,7 @@ export default function RegisterPage() {
           <UserPlus className="h-7 w-7 text-white" />
         </div>
         <h1 className="text-3xl font-bold text-white">Get Started</h1>
-        <p className="mt-2 text-blue-200/70">Create your UniSocial account today</p>
+        <p className="mt-2 text-blue-200/70">Create your account today</p>
       </div>
 
       {/* Card */}
@@ -68,6 +69,11 @@ export default function RegisterPage() {
               <CheckCircle2 className="ml-auto h-4 w-4 text-emerald-400/50" />
             </div>
           ))}
+        </div>
+
+        {/* Social Login */}
+        <div className="mb-6">
+          <SocialLoginButtons isLoading={isRedirecting} />
         </div>
 
         <button

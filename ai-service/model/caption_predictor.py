@@ -462,5 +462,17 @@ class CaptionPredictor:
             return self.generate_caption_beam(image)
 
 
-# ── Singleton instance — loads once at import time ────────────────────
-caption_predictor = CaptionPredictor()
+# ── Singleton instance — loads once at import time, with error handling ────────────────────
+try:
+    caption_predictor = CaptionPredictor()
+    logger.info("✅ Caption predictor initialized successfully")
+except Exception as e:
+    logger.error(f"❌ Failed to initialize caption predictor: {e}", exc_info=True)
+    # Create a fallback object that's not ready
+    class FailedCaptionPredictor:
+        def __init__(self):
+            self.ready = False
+        def predict(self, image, method="beam"):
+            return ""
+    caption_predictor = FailedCaptionPredictor()
+

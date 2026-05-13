@@ -1,6 +1,6 @@
-# Contributing to UniSocial
+# Contributing to AI Social Platform
 
-Thank you for your interest in contributing to UniSocial! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to AI Social Platform! This document provides guidelines and instructions for contributing.
 
 ## 📋 Table of Contents
 
@@ -46,11 +46,11 @@ Before contributing, ensure you have:
 ```bash
 # 1. Fork the repository on GitHub
 # 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/unisocial.git
-cd unisocial
+git clone https://github.com/YOUR_USERNAME/ai-social-platform.git
+cd ai-social-platform
 
 # 3. Add upstream remote
-git remote add upstream https://github.com/original/unisocial.git
+git remote add upstream https://github.com/original/ai-social-platform.git
 
 # 4. Install dependencies
 npm install
@@ -583,7 +583,7 @@ def generate_caption(
         APIError: If AI service fails
 
     Example:
-        >>> caption = generate_caption("University event photo")
+        >>> caption = generate_caption("Product launch photo")
         >>> print(caption)
         "Amazing campus event! 🎓"
     """
@@ -624,7 +624,7 @@ If you have questions:
 
 ## Thank You!
 
-Your contributions make UniSocial better for everyone. Thank you for being part of our community! 🎉
+Your contributions make AI Social Platform better for everyone. Thank you for being part of our community! 🎉
 
 ---
 

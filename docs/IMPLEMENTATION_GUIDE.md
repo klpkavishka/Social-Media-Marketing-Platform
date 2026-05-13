@@ -1,4 +1,4 @@
-# UniSocial - Implementation Guide
+# AI Social Platform - Implementation Guide
 
 ## 🚀 Quick Start
 
@@ -281,13 +281,13 @@ docker-compose -f docker-compose.staging.yml up -d
 
 ```bash
 # Build and push images
-docker build -t unisocial/backend:latest ./backend
-docker build -t unisocial/frontend:latest ./frontend
-docker build -t unisocial/ai-service:latest ./ai-service
+docker build -t ai-social-platform/backend:latest ./backend
+docker build -t ai-social-platform/frontend:latest ./frontend
+docker build -t ai-social-platform/ai-service:latest ./ai-service
 
-docker push unisocial/backend:latest
-docker push unisocial/frontend:latest
-docker push unisocial/ai-service:latest
+docker push ai-social-platform/backend:latest
+docker push ai-social-platform/frontend:latest
+docker push ai-social-platform/ai-service:latest
 
 # Deploy to Kubernetes
 kubectl apply -f infrastructure/kubernetes/
@@ -358,7 +358,7 @@ SENTRY_DSN=your_sentry_dsn
 Swagger documentation available at:
 
 - Development: http://localhost:4000/api/docs
-- Production: https://api.unisocial.com/docs
+- Production: https://api.ai-social-platform.com/docs
 
 ### AI Service API
 
@@ -417,7 +417,7 @@ FastAPI automatic documentation:
 docker ps
 
 # Check database logs
-docker logs unisocial-postgres
+docker logs ai-social-platform-postgres
 
 # Verify connection string
 echo $DATABASE_URL
@@ -427,7 +427,7 @@ echo $DATABASE_URL
 
 ```bash
 # Restart Redis
-docker restart unisocial-redis
+docker restart ai-social-platform-redis
 
 # Test connection
 redis-cli ping
@@ -440,7 +440,7 @@ redis-cli ping
 echo $OPENAI_API_KEY
 
 # Check service logs
-docker logs unisocial-ai-service
+docker logs ai-social-platform-ai-service
 ```
 
 #### Frontend Build Errors
@@ -489,7 +489,7 @@ npm run build
 - **Documentation**: See `/docs` folder
 - **Issues**: Create GitHub issue
 - **Discussions**: GitHub Discussions
-- **Email**: support@unisocial.com
+- **Email**: support@ai-social-platform.com
 
 ---
 

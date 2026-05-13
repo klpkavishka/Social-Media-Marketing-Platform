@@ -1,323 +1,139 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Badge } from '@/components/ui/badge'
-import { Sparkles, CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
-import { useCreateContent } from '@/lib/hooks/use-content'
-import { ImageUploader } from '@/components/generator'
-import axios from 'axios'
+import { RichTextEditor } from '@/components/content/rich-text-editor'
+import { PlatformPreview } from '@/components/content/platform-preview'
+import { CharacterCounter } from '@/components/content/character-counter'
+import { ContentTemplates } from '@/components/content/content-templates'
+import { MediaLibrary } from '@/components/content/media-library'
+import { PlatformOptions } from '@/components/content/platform-options'
+import { SchedulingPanel } from '@/components/content/scheduling-panel'
+import { AIAssistantPanel } from '@/components/content/ai-assistant-panel'
+import { Send, Save } from 'lucide-react'
 
-export default function NewContentPage() {
-  const router = useRouter()
-  const createContent = useCreateContent()
-
+export default function ContentCreationPage() {
+  const [content, setContent] = useState('')
+  const [selectedPlatform, setSelectedPlatform] = useState('instagram')
+  const [selectedPlatforms, setSelectedPlatforms] = useState(['instagram', 'facebook'])
   const [title, setTitle] = useState('')
-  const [caption, setCaption] = useState('')
-  const [date, setDate] = useState<Date>()
-  const [time, setTime] = useState('')
-  const [platform, setPlatform] = useState('')
-  const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null)
-  const [hashtags, setHashtags] = useState<string[]>([])
-  const [generating, setGenerating] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleGenerateCaption = async () => {
-    if (!selectedImage) {
-      toast.error('Please upload an image first')
-      return
-    }
-
-    setGenerating(true)
-    try {
-      const form = new FormData()
-      form.append('image', selectedImage.file)
-
-      const { data } = await axios.post('/api/hashtags/predict', form)
-
-      setCaption(data.caption || `Check out this amazing content! 📸 ${data.category || ''}`)
-      if (data.hashtags) {
-        setHashtags(data.hashtags)
-      }
-      toast.success('Caption and hashtags generated successfully!')
-    } catch (error) {
-      console.error('Generation error:', error)
-      toast.error('Failed to generate caption and hashtags')
-    } finally {
-      setGenerating(false)
-    }
+  const handleTemplateSelect = (template: string) => {
+    setContent(template)
   }
 
-  const handleImageSelect = (file: File | null, preview: string) => {
-    if (!file) {
-      setSelectedImage(null)
-      setCaption('')
-      setHashtags([])
-      return
-    }
-    setSelectedImage({ file, preview })
+  const handleApplySuggestion = (suggestion: string) => {
+    // In a real app, this would call an AI API
+    setContent((prev) => prev + `\n\n[AI: ${suggestion}]`)
   }
 
-  const validateForm = () => {
-    if (!title.trim()) {
-      toast.error('Please enter a title')
-      return false
-    }
-    if (!caption.trim()) {
-      toast.error('Please enter a caption')
-      return false
-    }
-    if (!platform) {
-      toast.error('Please select a platform')
-      return false
-    }
-    return true
-  }
-
-  const handleSchedulePost = async () => {
-    if (!validateForm()) return
-
-    if (!date || !time) {
-      toast.error('Please select a date and time to schedule')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const [hours, minutes] = time.split(':')
-      const scheduledDateTime = new Date(date)
-      scheduledDateTime.setHours(parseInt(hours), parseInt(minutes))
-
-      const contentData = {
-        title,
-        body: caption,
-        type: 'post' as const,
-        status: 'scheduled' as const,
-        platforms: [platform],
-        scheduledDate: scheduledDateTime.toISOString(),
-      }
-
-      console.log('Scheduling post with data:', contentData)
-      await createContent.mutateAsync(contentData)
-      toast.success('Post scheduled successfully!')
-      router.push('/dashboard/content/calendar')
-    } catch (error: any) {
-      console.error('Error scheduling post:', error)
-
-      // Extract meaningful error message
-      let errorMessage = 'Failed to schedule post'
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
-
-      toast.error(errorMessage)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleSaveAsDraft = async () => {
-    if (!validateForm()) return
-
-    setIsSubmitting(true)
-    try {
-      const contentData = {
-        title,
-        body: caption,
-        type: 'post' as const,
-        status: 'draft' as const,
-        platforms: [platform],
-      }
-
-      console.log('Saving draft with data:', contentData)
-      await createContent.mutateAsync(contentData)
-      toast.success('Post saved as draft!')
-      router.push('/dashboard/content')
-    } catch (error: any) {
-      console.error('Error saving draft:', error)
-
-      // Extract meaningful error message
-      let errorMessage = 'Failed to save draft'
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
-
-      toast.error(errorMessage)
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handlePlatformChange = (platforms: string[]) => {
+    setSelectedPlatforms(platforms)
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Create New Post</h1>
-        <p className="text-muted-foreground">
-          Create and schedule content for your social media platforms
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b bg-card sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold font-space-grotesk">Create Content</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Write, schedule, and publish to multiple platforms
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="gap-2">
+                <Save className="h-4 w-4" />
+                <span className="hidden sm:inline">Save Draft</span>
+              </Button>
+              <Button
+                disabled={!content || selectedPlatforms.length === 0}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+                <span className="hidden sm:inline">Publish</span>
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Title</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                placeholder="Enter post title..."
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - Tools */}
+          <div className="lg:col-span-1 space-y-6 order-3 lg:order-1">
+            {/* Content Templates */}
+            <ContentTemplates onSelectTemplate={handleTemplateSelect} />
+
+            {/* Media Library */}
+            <MediaLibrary />
+
+            {/* Platform Options */}
+            <PlatformOptions onPlatformChange={handlePlatformChange} />
+          </div>
+
+          {/* Middle - Editor */}
+          <div className="lg:col-span-2 order-1 lg:order-2 space-y-6">
+            {/* Title Input */}
+            <div>
+              <label className="text-sm font-medium block mb-2">Post Title (Optional)</label>
+              <input
+                type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                placeholder="Give your post a title..."
+                className="w-full px-4 py-2 border rounded-lg bg-background text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50"
               />
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Media</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUploader
-                onImageSelect={handleImageSelect}
-                selectedImage={selectedImage || undefined}
+            {/* Rich Text Editor */}
+            <div>
+              <label className="text-sm font-medium block mb-2">Content</label>
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+                placeholder="Write your content here or use a template..."
               />
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle>Caption</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={handleGenerateCaption}
-                disabled={generating}
-              >
-                <Sparkles className="h-4 w-4" />
-                {generating ? 'Generating...' : 'AI Generate'}
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                placeholder="Write your caption here..."
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                rows={6}
-              />
-              <p className="mt-2 text-xs text-muted-foreground">
-                {caption.length} / 2200 characters
-              </p>
+            {/* Character Counter */}
+            <CharacterCounter content={content} platform={selectedPlatform} />
 
-              {hashtags.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-xs uppercase text-muted-foreground">
-                    Generated Hashtags
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {hashtags.map((tag, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => setCaption((prev) => `${prev}\n\n${hashtags.join(' ')}`)}
+            {/* Platform Selector for Preview */}
+            <div>
+              <label className="text-sm font-medium block mb-2">Select Platform for Preview</label>
+              <div className="grid grid-cols-4 gap-2">
+                {['instagram', 'facebook', 'twitter', 'linkedin'].map((platform) => (
+                  <button
+                    key={platform}
+                    onClick={() => setSelectedPlatform(platform)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      selectedPlatform === platform
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
                   >
-                    Add all to caption
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Publishing</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Platforms</Label>
-                <Select value={platform} onValueChange={setPlatform}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select platforms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                    <SelectItem value="instagram">Instagram</SelectItem>
-                    <SelectItem value="twitter">Twitter</SelectItem>
-                    <SelectItem value="linkedin">LinkedIn</SelectItem>
-                  </SelectContent>
-                </Select>
+                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  </button>
+                ))}
               </div>
+            </div>
+          </div>
 
-              <div className="space-y-2">
-                <Label>Schedule</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !date && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'PPP') : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
+          {/* Right Sidebar - Preview & Actions */}
+          <div className="lg:col-span-1 order-2 lg:order-3 space-y-6">
+            {/* Platform Preview */}
+            <PlatformPreview content={content} platform={selectedPlatform} />
 
-              <div className="space-y-2">
-                <Label>Time</Label>
-                <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-              </div>
+            {/* Scheduling Panel */}
+            <SchedulingPanel />
 
-              <div className="space-y-2">
-                <Button className="w-full" onClick={handleSchedulePost} disabled={isSubmitting}>
-                  {isSubmitting ? 'Scheduling...' : 'Schedule Post'}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleSaveAsDraft}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Saving...' : 'Save as Draft'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            {/* AI Assistant Panel */}
+            <AIAssistantPanel content={content} onApplySuggestion={handleApplySuggestion} />
+          </div>
         </div>
       </div>
     </div>

@@ -123,10 +123,10 @@ Ensure MongoDB is running (see [MONGODB_SETUP.md](./MONGODB_SETUP.md)).
 
 ```env
 # PostgreSQL
-DATABASE_URL=postgresql://user:password@localhost:5432/unisocial
+DATABASE_URL=postgresql://user:password@localhost:5432/ai_social_platform
 
 # MongoDB
-MONGODB_URI=mongodb://localhost:27017/unisocial-analytics
+MONGODB_URI=mongodb://localhost:27017/ai_social_platform_analytics
 
 # Redis
 REDIS_HOST=localhost

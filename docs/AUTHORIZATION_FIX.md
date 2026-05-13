@@ -29,7 +29,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
-DB_DATABASE=unisocial
+DB_DATABASE=ai_social_platform
 JWT_SECRET=dev-secret-key
 JWT_EXPIRES_IN=1h
 ```
@@ -141,7 +141,7 @@ npm run start:dev
 ```bash
 # Check PostgreSQL is running
 # Verify connection
-psql -U postgres -h localhost -d unisocial
+psql -U postgres -h localhost -d ai_social_platform
 ```
 
 ### ❌ "Migrations failed"

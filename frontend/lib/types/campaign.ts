@@ -7,7 +7,7 @@ export interface Campaign {
   endDate: string
   budget?: number
   platforms: string[]
-  universityId: string
+  organizationId: string
   createdBy: string
   createdAt: string
   updatedAt: string

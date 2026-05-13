@@ -6,7 +6,7 @@ export interface TeamMember {
   role: 'admin' | 'manager' | 'creator' | 'analyst'
   status: 'active' | 'invited' | 'inactive'
   avatarUrl?: string
-  universityId: string
+  organizationId: string
   department?: string
   lastActive?: string
   invitedAt?: string

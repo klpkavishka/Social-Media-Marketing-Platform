@@ -4,13 +4,13 @@ export interface User {
   firstName: string
   lastName: string
   role: 'admin' | 'manager' | 'creator' | 'analyst'
-  universityId: string
+  organizationId: string
   avatarUrl?: string
   createdAt: string
   updatedAt: string
 }
 
-export interface University {
+export interface Organization {
   id: string
   name: string
   domain: string

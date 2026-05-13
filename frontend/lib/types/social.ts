@@ -19,7 +19,10 @@ export interface SocialAccount {
   accessToken?: string
   refreshToken?: string
   expiresAt?: string
-  universityId: string
+  organizationId: string
+  postsRemaining?: number
+  postsLimit?: number
+  limitResetDate?: string
 }
 
 export interface AccountMetrics {

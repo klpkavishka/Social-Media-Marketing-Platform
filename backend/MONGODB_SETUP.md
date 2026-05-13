@@ -12,19 +12,19 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:7.0
-    container_name: unisocial-mongodb
+    container_name: ai-social-platform-mongodb
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
-      MONGO_INITDB_DATABASE: unisocial-analytics
+      MONGO_INITDB_DATABASE: ai_social_platform_analytics
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
     networks:
-      - unisocial-network
+      - ai-social-platform-network
 
 volumes:
   mongodb_data:
@@ -33,7 +33,7 @@ volumes:
     driver: local
 
 networks:
-  unisocial-network:
+  ai-social-platform-network:
     driver: bridge
 ```
 
@@ -74,10 +74,10 @@ sudo systemctl start mongod
 
 ```env
 # MongoDB (for Analytics Time-Series Data)
-MONGODB_URI=mongodb://localhost:27017/unisocial-analytics
+MONGODB_URI=mongodb://localhost:27017/ai_social_platform_analytics
 
 # For Docker with authentication:
-# MONGODB_URI=mongodb://admin:admin123@localhost:27017/unisocial-analytics?authSource=admin
+# MONGODB_URI=mongodb://admin:admin123@localhost:27017/ai_social_platform_analytics?authSource=admin
 ```
 
 ### 2. Install Dependencies

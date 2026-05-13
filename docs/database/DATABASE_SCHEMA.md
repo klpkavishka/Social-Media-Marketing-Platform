@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The UniSocial platform uses a **polyglot persistence** strategy:
+The AI Social Platform uses a **polyglot persistence** strategy:
 
 - **PostgreSQL**: Primary database for structured relational data
 - **MongoDB**: Document store for analytics, logs, and semi-structured data

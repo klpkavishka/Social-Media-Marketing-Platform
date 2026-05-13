@@ -1,6 +1,6 @@
-# 📚 Documentation Index - UniSocial Platform
+# 📚 Documentation Index - AI Social Platform
 
-Welcome to the UniSocial documentation! This index will help you find exactly what you need.
+Welcome to the AI Social Platform documentation! This index will help you find exactly what you need.
 
 ## 🎯 Start Here
 
@@ -133,7 +133,7 @@ Welcome to the UniSocial documentation! This index will help you find exactly wh
 
 **Key Tables**:
 
-- `universities` - University accounts
+- `organizations` - Organization accounts
 - `users` - User management
 - `content` - Content posts
 - `social_accounts` - Social media accounts

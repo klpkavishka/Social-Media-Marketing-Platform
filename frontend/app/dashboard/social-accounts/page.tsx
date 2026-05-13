@@ -13,25 +13,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Search, Download } from 'lucide-react'
+import { Plus, Search, Download, AlertCircle } from 'lucide-react'
 import { SocialAccountCard } from '@/components/social/social-account-card'
 import { ConnectAccountDialog } from '@/components/social/connect-account-dialog'
 import { AccountMetricsSummary, RecentActivity } from '@/components/social/account-metrics'
 import { SocialAccount, AccountMetrics, SocialPlatform } from '@/lib/types/social'
+import { EmptyState } from '@/components/empty-state'
+import { ErrorMessage } from '@/components/messages'
+import { Tooltip } from '@/components/tooltip'
 
 export default function SocialAccountsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterPlatform, setFilterPlatform] = useState<string>('all')
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
 
   // Mock data - replace with actual API calls
   const mockAccounts: SocialAccount[] = [
     {
       id: '1',
       platform: 'instagram',
-      username: '@university_official',
-      displayName: 'University Official',
-      profileUrl: 'https://instagram.com/university_official',
+      username: '@company_official',
+      displayName: 'Company Official',
+      profileUrl: 'https://instagram.com/company_official',
       avatarUrl: '/images/instagram-avatar.jpg',
       connected: true,
       status: 'active',
@@ -40,28 +45,34 @@ export default function SocialAccountsPage() {
       posts: 892,
       lastSync: '2 hours ago',
       connectedAt: '2024-01-15',
-      universityId: 'univ-1',
+      organizationId: 'org-1',
+      postsRemaining: 45,
+      postsLimit: 50,
+      limitResetDate: 'May 30, 2026',
     },
     {
       id: '2',
       platform: 'facebook',
-      username: '@UniversityPage',
-      displayName: 'University Official Page',
-      profileUrl: 'https://facebook.com/UniversityPage',
+      username: '@CompanyPage',
+      displayName: 'Company Official Page',
+      profileUrl: 'https://facebook.com/CompanyPage',
       connected: true,
       status: 'active',
       followers: 32500,
       posts: 654,
       lastSync: '1 hour ago',
       connectedAt: '2024-01-10',
-      universityId: 'univ-1',
+      organizationId: 'org-1',
+      postsRemaining: 38,
+      postsLimit: 50,
+      limitResetDate: 'May 30, 2026',
     },
     {
       id: '3',
       platform: 'twitter',
-      username: '@UniOfficial',
-      displayName: 'University',
-      profileUrl: 'https://twitter.com/UniOfficial',
+      username: '@CompanyOfficial',
+      displayName: 'Company Official',
+      profileUrl: 'https://twitter.com/CompanyOfficial',
       connected: true,
       status: 'warning',
       followers: 18200,
@@ -69,21 +80,27 @@ export default function SocialAccountsPage() {
       posts: 1234,
       lastSync: '5 hours ago',
       connectedAt: '2024-01-08',
-      universityId: 'univ-1',
+      organizationId: 'org-1',
+      postsRemaining: 8,
+      postsLimit: 50,
+      limitResetDate: 'May 30, 2026',
     },
     {
       id: '4',
       platform: 'linkedin',
-      username: 'university-official',
-      displayName: 'University',
-      profileUrl: 'https://linkedin.com/company/university-official',
+      username: 'company-official',
+      displayName: 'Company',
+      profileUrl: 'https://linkedin.com/company/company-official',
       connected: true,
       status: 'active',
       followers: 12800,
       posts: 345,
       lastSync: '30 minutes ago',
       connectedAt: '2024-02-01',
-      universityId: 'univ-1',
+      organizationId: 'org-1',
+      postsRemaining: 42,
+      postsLimit: 50,
+      limitResetDate: 'May 30, 2026',
     },
   ]
 
@@ -204,11 +221,13 @@ export default function SocialAccountsPage() {
 
   const handleConnect = (platform: SocialPlatform) => {
     console.log('Connecting to', platform)
+    setConnectionError(null)
     // Handle OAuth flow or connection logic
   }
 
   const handleReconnect = (accountId: string) => {
     console.log('Reconnecting account', accountId)
+    setSyncError(null)
     // Handle reconnection logic
   }
 
@@ -219,11 +238,46 @@ export default function SocialAccountsPage() {
 
   const handleDisconnect = (accountId: string) => {
     console.log('Disconnecting account', accountId)
-    // Handle disconnection logic
+    // Handle disconnection logic - in real implementation, this would call API
+  }
+
+  const handleQuickPost = (accountId: string, postType: string) => {
+    console.log(`Quick post - Account: ${accountId}, Type: ${postType}`)
+    // Navigate to content creation with pre-selected account
+    // or open quick post modal for rapid posting
   }
 
   return (
     <div className="space-y-6">
+      {/* Error Messages */}
+      {connectionError && (
+        <ErrorMessage
+          title="Connection Failed"
+          message={connectionError}
+          solutions={[
+            'Check your internet connection',
+            'Verify your account credentials',
+            'Try connecting again in a few moments',
+          ]}
+          onDismiss={() => setConnectionError(null)}
+          onRetry={() => setConnectionError(null)}
+        />
+      )}
+
+      {syncError && (
+        <ErrorMessage
+          title="Sync Failed"
+          message={syncError}
+          solutions={[
+            'Check your authentication tokens',
+            'Ensure the account is still valid',
+            'Try reconnecting the account',
+          ]}
+          onDismiss={() => setSyncError(null)}
+          onRetry={() => setSyncError(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -246,33 +300,37 @@ export default function SocialAccountsPage() {
 
       {/* Status Overview */}
       <div className="flex gap-4">
-        <Card className="flex-1">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Connected Accounts</p>
-                <p className="text-2xl font-bold">{mockAccounts.length}</p>
-              </div>
-              <Badge variant="default" className="bg-green-500">
-                {activeAccounts.length} Active
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-        {warningAccounts.length > 0 && (
-          <Card className="flex-1 border-yellow-200 bg-yellow-50">
+        <Tooltip content="Number of social media accounts connected to your workspace" side="top">
+          <Card className="flex-1">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-yellow-800">Needs Attention</p>
-                  <p className="text-2xl font-bold text-yellow-900">{warningAccounts.length}</p>
+                  <p className="text-sm text-muted-foreground">Connected Accounts</p>
+                  <p className="text-2xl font-bold">{mockAccounts.length}</p>
                 </div>
-                <Button size="sm" variant="outline">
-                  Review
-                </Button>
+                <Badge variant="default" className="bg-green-500">
+                  {activeAccounts.length} Active
+                </Badge>
               </div>
             </CardContent>
           </Card>
+        </Tooltip>
+        {warningAccounts.length > 0 && (
+          <Tooltip content="Accounts that need your attention due to sync issues or quota limits" side="top">
+            <Card className="flex-1 border-yellow-200 bg-yellow-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-yellow-800">Needs Attention</p>
+                    <p className="text-2xl font-bold text-yellow-900">{warningAccounts.length}</p>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    Review
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </Tooltip>
         )}
       </div>
 
@@ -345,29 +403,28 @@ export default function SocialAccountsPage() {
                 onReconnect={handleReconnect}
                 onManage={handleManage}
                 onDisconnect={handleDisconnect}
+                onQuickPost={handleQuickPost}
               />
             ))}
           </div>
           {filteredAccounts.length === 0 && (
-            <Card>
-              <CardContent className="py-12">
-                <div className="text-center">
-                  <p className="text-lg font-semibold">No accounts found</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Try adjusting your filters or connect a new account
-                  </p>
-                  <ConnectAccountDialog
-                    onConnect={handleConnect}
-                    connectedPlatforms={connectedPlatforms}
-                  >
-                    <Button className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Connect Account
-                    </Button>
-                  </ConnectAccountDialog>
-                </div>
-              </CardContent>
-            </Card>
+            <EmptyState
+              title="No accounts found"
+              description="Try adjusting your filters or connect a new account to get started"
+              action={{
+                label: 'Connect Account',
+                onClick: () => console.log('Open connect dialog'),
+                icon: <Plus className="h-4 w-4" />,
+              }}
+              secondaryAction={{
+                label: 'Clear Filters',
+                onClick: () => {
+                  setSearchQuery('')
+                  setFilterPlatform('all')
+                  setFilterStatus('all')
+                },
+              }}
+            />
           )}
         </TabsContent>
 
@@ -381,6 +438,7 @@ export default function SocialAccountsPage() {
                 onReconnect={handleReconnect}
                 onManage={handleManage}
                 onDisconnect={handleDisconnect}
+                onQuickPost={handleQuickPost}
               />
             ))}
           </div>
@@ -396,20 +454,16 @@ export default function SocialAccountsPage() {
                 onReconnect={handleReconnect}
                 onManage={handleManage}
                 onDisconnect={handleDisconnect}
+                onQuickPost={handleQuickPost}
               />
             ))}
           </div>
           {warningAccounts.length === 0 && (
-            <Card>
-              <CardContent className="py-12">
-                <div className="text-center">
-                  <p className="text-lg font-semibold">All accounts are healthy!</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    No accounts need attention at this time
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <EmptyState
+              title="All accounts are healthy!"
+              description="No accounts need attention at this time. Keep up the great work!"
+              size="md"
+            />
           )}
         </TabsContent>
       </Tabs>

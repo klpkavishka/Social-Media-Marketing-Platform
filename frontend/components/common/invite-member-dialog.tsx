@@ -99,7 +99,7 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: InviteMembe
                 <Input
                   id="email"
                   type="email"
-                  placeholder="colleague@university.edu"
+                  placeholder="colleague@company.com"
                   className="pl-10"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}

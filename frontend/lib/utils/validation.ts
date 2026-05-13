@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
@@ -11,7 +11,7 @@ export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
-  universityName: z.string().min(2, 'University name is required'),
+  organizationName: z.string().min(2, 'Organization name is required'),
   role: z.string().min(1, 'Role is required'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",

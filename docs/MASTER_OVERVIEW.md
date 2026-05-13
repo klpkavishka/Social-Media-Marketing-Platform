@@ -1,8 +1,8 @@
-# 🎓 UniSocial - AI-Powered University Social Media & Marketing Platform
+# 🚀 AI Social Platform - AI-Powered Enterprise Social Media & Marketing Platform
 
 ## Executive Summary
 
-UniSocial is a comprehensive, enterprise-grade social media management platform specifically designed for universities. It provides centralized management, AI-powered content creation, advanced analytics, and automated workflows for managing social media presence across Instagram, TikTok, Facebook, LinkedIn, and YouTube.
+AI Social Platform is a comprehensive, enterprise-grade social media management platform designed for organizations of all sizes. It provides centralized management, AI-powered content creation, advanced analytics, and automated workflows for managing social media presence across Instagram, TikTok, Facebook, LinkedIn, and YouTube.
 
 ---
 
@@ -93,9 +93,9 @@ UniSocial is a comprehensive, enterprise-grade social media management platform 
 
 ### Scalability
 
-- **Universities**: 100+ simultaneously
+- **Organizations**: 100+ simultaneously
 - **Users**: 5,000+ concurrent
-- **Content**: 100,000+ posts per university
+- **Content**: 100,000+ posts per organization
 - **API Requests**: 100,000+ per minute
 - **Response Time**: < 200ms (p95)
 
@@ -122,12 +122,12 @@ UniSocial is a comprehensive, enterprise-grade social media management platform 
 ### Super Admin
 
 - Platform-wide control
-- Multi-university management
+- Multi-organization management
 - System configuration
 
-### University Admin
+### Organization Admin
 
-- Full university access
+- Full organization access
 - User management
 - Content approval
 - Campaign management
@@ -259,7 +259,7 @@ UniSocial is a comprehensive, enterprise-grade social media management platform 
 - **AI APIs**: $200-500
 - **Monitoring**: $0 (self-hosted)
 - **Total**: $1,200-2,650/month
-- **Per University**: $120-265/month
+- **Per Organization**: $120-265/month
 
 ### Scaling Costs
 
@@ -328,7 +328,7 @@ docs/
 ```bash
 # Clone repository
 git clone <repository-url>
-cd unisocial
+cd ai-social-platform
 
 # Set up environment
 cp .env.example .env
@@ -401,7 +401,7 @@ docker-compose up -d
 
 ### vs. General Social Media Tools (Hootsuite, Buffer)
 
-✅ University-specific features
+✅ Organization-specific features
 ✅ Student-focused AI
 ✅ Admissions-oriented analytics
 ✅ Compliance with education regulations
@@ -443,7 +443,7 @@ docker-compose up -d
 - GitHub Issues: Bug reports and features
 - GitHub Discussions: Questions and ideas
 - Documentation: Comprehensive guides
-- Support Email: support@unisocial.com
+- Support Email: support@ai-social-platform.com
 
 ---
 

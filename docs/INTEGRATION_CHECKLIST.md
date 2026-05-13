@@ -88,7 +88,7 @@
 **Deadline: Day 5**
 
 ```checklist
-- [ ] Google Cloud Project created (UniSocial)
+- [ ] Google Cloud Project created (AI Social Platform)
 - [ ] YouTube Data API v3 enabled
 - [ ] YouTube Analytics API enabled
 - [ ] Google Drive API enabled

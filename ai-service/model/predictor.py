@@ -62,57 +62,65 @@ class HashtagPredictor:
         return aug.astype(np.float32)
 
     def predict(self, image: Image.Image, n_tta: int = 5) -> dict:
-        tensor = self.preprocess(image)
+        try:
+            tensor = self.preprocess(image)
 
-        # Test-time augmentation: average 5 slightly varied predictions
-        preds = []
-        for _ in range(n_tta):
-            aug = self._augment(tensor)
-            preds.append(self.model.predict(aug, verbose=0)[0])
+            # Test-time augmentation: average 5 slightly varied predictions
+            preds = []
+            for _ in range(n_tta):
+                aug = self._augment(tensor)
+                preds.append(self.model.predict(aug, verbose=0)[0])
 
-        avg = np.mean(preds, axis=0)
+            avg = np.mean(preds, axis=0)
 
-        top_idx = avg.argsort()[::-1][:3]
-        top3 = [
-            {"category": self.le.classes_[i], "confidence": round(float(avg[i]) * 100, 2)}
-            for i in top_idx
-        ]
+            top_idx = avg.argsort()[::-1][:3]
+            top3 = [
+                {"category": self.le.classes_[i], "confidence": round(float(avg[i]) * 100, 2)}
+                for i in top_idx
+            ]
 
-        top_cat  = top3[0]["category"]
-        top_conf = top3[0]["confidence"]
+            top_cat  = top3[0]["category"]
+            top_conf = top3[0]["confidence"]
 
-        # Build hashtag list from DB
-        tags, seen = [], set()
-        for tag in self.hashtag_db.get(top_cat, []):
-            if tag not in seen:
-                tags.append(tag); seen.add(tag)
-
-        # Blend in secondary category if confident enough
-        if len(top3) > 1 and top3[1]["confidence"] > 20:
-            for tag in self.hashtag_db.get(top3[1]["category"], [])[:5]:
+            # Build hashtag list from DB
+            tags, seen = [], set()
+            for tag in self.hashtag_db.get(top_cat, []):
                 if tag not in seen:
                     tags.append(tag); seen.add(tag)
 
-        # ── Generate caption using the caption model ──────────────────
-        caption = ""
-        
-        if self.caption_predictor and self.caption_predictor.ready:
-            logger.info("🤖 Generating caption with trained model...")
-            caption = self.caption_predictor.predict(image, method="beam")
-            logger.info(f"📝 Model output: {caption}")
-        else:
-            logger.warning("⚠️ Caption model not available")
-        
-        logger.info(f"✅ Final caption: {caption}")
+            # Blend in secondary category if confident enough
+            if len(top3) > 1 and top3[1]["confidence"] > 20:
+                for tag in self.hashtag_db.get(top3[1]["category"], [])[:5]:
+                    if tag not in seen:
+                        tags.append(tag); seen.add(tag)
 
-        return {
-            "category":     top_cat,
-            "confidence":   top_conf,
-            "reliable":     top_conf >= 60.0,
-            "top3":         top3,
-            "hashtags":     ["#" + t for t in tags[:20]],
-            "hashtag_count": len(tags[:20]),
-            "caption":      caption,
-        }
+            # ── Generate caption using the caption model ──────────────────
+            caption = ""
+            
+            if self.caption_predictor and self.caption_predictor.ready:
+                logger.info("🤖 Generating caption with trained model...")
+                try:
+                    caption = self.caption_predictor.predict(image, method="beam")
+                    logger.info(f"📝 Model output: {caption}")
+                except Exception as e:
+                    logger.error(f"❌ Caption generation error: {e}", exc_info=True)
+                    caption = ""
+            else:
+                logger.warning("⚠️ Caption model not available")
+            
+            logger.info(f"✅ Final caption: {caption}")
+
+            return {
+                "category":     top_cat,
+                "confidence":   top_conf,
+                "reliable":     top_conf >= 60.0,
+                "top3":         top3,
+                "hashtags":     ["#" + t for t in tags[:20]],
+                "hashtag_count": len(tags[:20]),
+                "caption":      caption,
+            }
+        except Exception as e:
+            logger.error(f"❌ Prediction failed: {e}", exc_info=True)
+            raise RuntimeError(f"Prediction failed: {str(e)}") from e
 
 predictor = HashtagPredictor()   # loads once at import time

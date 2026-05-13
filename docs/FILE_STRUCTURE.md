@@ -1,11 +1,11 @@
 # 📁 Project File Structure
 
-This document provides a complete overview of the UniSocial project structure.
+This document provides a complete overview of the AI Social Platform project structure.
 
 ## 🌳 Complete Directory Tree
 
 ```
-unisocial/
+ai-social-platform/
 │
 ├── 📄 README.md                        # Project introduction and quick start
 ├── 📄 MASTER_OVERVIEW.md               # Complete platform overview
@@ -262,7 +262,7 @@ unisocial/
 │   │   │   └── 📁 settings/            # Settings
 │   │   │       ├── 📄 page.tsx
 │   │   │       ├── 📁 profile/
-│   │   │       ├── 📁 university/
+│   │   │       ├── 📁 organization/
 │   │   │       └── 📁 integrations/
 │   │   │
 │   │   └── 📁 api/                     # API routes (if needed)
@@ -392,7 +392,7 @@ unisocial/
 │   │   │
 │   │   └── 📁 data/
 │   │       ├── 📄 prompts.json
-│   │       └── 📄 university_kb.json
+│   │       └── 📄 organization_kb.json
 │   │
 │   └── 📁 tests/
 │       ├── 📄 test_content_generator.py

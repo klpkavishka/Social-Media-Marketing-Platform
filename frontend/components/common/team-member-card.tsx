@@ -4,6 +4,7 @@ import { TeamMember } from '@/lib/types/team'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,12 +26,15 @@ import {
   FileText,
   BarChart,
   Clock,
+  AlertCircle,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 interface TeamMemberCardProps {
   member: TeamMember
   currentUserId?: string
+  isSelected?: boolean
+  onSelectionChange?: (memberId: string, selected: boolean) => void
   onEdit?: (member: TeamMember) => void
   onRemove?: (member: TeamMember) => void
   onResendInvite?: (member: TeamMember) => void
@@ -60,6 +64,8 @@ const statusColors = {
 export function TeamMemberCard({
   member,
   currentUserId,
+  isSelected = false,
+  onSelectionChange,
   onEdit,
   onRemove,
   onResendInvite,
@@ -89,13 +95,29 @@ export function TeamMemberCard({
     }
   }
 
+  const handleCheckboxChange = (checked: boolean) => {
+    onSelectionChange?.(member.id, checked)
+  }
+
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}>
       <CardContent className="p-6">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
+          {/* Checkbox */}
+          {onSelectionChange && (
+            <div className="flex-shrink-0 pt-0.5">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={handleCheckboxChange}
+                disabled={isCurrentUser}
+                aria-label={`Select ${member.firstName} ${member.lastName}`}
+              />
+            </div>
+          )}
+
           {/* Member Info */}
-          <div className="flex items-start gap-4 flex-1">
-            <div className="relative">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            <div className="relative flex-shrink-0">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={member.avatarUrl} alt={`${member.firstName} ${member.lastName}`} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
@@ -116,14 +138,14 @@ export function TeamMemberCard({
                   {member.firstName} {member.lastName}
                 </h3>
                 {isCurrentUser && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs flex-shrink-0">
                     You
                   </Badge>
                 )}
               </div>
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <Mail className="h-3 w-3" />
+                <Mail className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{member.email}</span>
               </div>
 
@@ -131,10 +153,18 @@ export function TeamMemberCard({
                 <p className="text-sm text-muted-foreground mb-2">{member.department}</p>
               )}
 
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                <Clock className="h-3 w-3 flex-shrink-0" />
                 <span>{getStatusText()}</span>
               </div>
+
+              {/* Status Alert for Invited Members */}
+              {member.status === 'invited' && (
+                <div className="flex items-center gap-2 text-xs text-yellow-700 bg-yellow-50 p-2 rounded">
+                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                  <span>Invitation pending - no access yet</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -142,7 +172,7 @@ export function TeamMemberCard({
           {!isCurrentUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -182,7 +212,7 @@ export function TeamMemberCard({
           )}
         </div>
 
-        {/* Role Badge */}
+        {/* Role Badge and Permissions */}
         <div className="mt-4 pt-4 border-t">
           <div className="flex items-center justify-between">
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${roleColors[member.role]}`}>

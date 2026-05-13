@@ -21,7 +21,7 @@ import {
   Info,
 } from 'lucide-react'
 
-export default function UniversitySettings() {
+export default function OrganizationSettings() {
   const aiFeatures = [
     {
       name: 'Content Generation',
@@ -62,15 +62,15 @@ export default function UniversitySettings() {
 
   return (
     <div className="space-y-6">
-      {/* AI University Overview */}
+      {/* AI Assistant Overview */}
       <Card className="border-2 border-primary">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Brain className="h-6 w-6 text-primary" />
-            <CardTitle>UniSocial AI Assistant</CardTitle>
+            <CardTitle>AI Assistant</CardTitle>
           </div>
           <CardDescription>
-            Leverage AI to enhance your social media marketing strategy.
+            Leverage AI to enhance your social media marketing strategy for your organization.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -206,7 +206,7 @@ export default function UniversitySettings() {
             <Input
               id="keywords"
               placeholder="e.g., social media, marketing, engagement"
-              defaultValue="social media, university, students"
+              defaultValue="social media, marketing, engagement"
             />
             <p className="text-xs text-muted-foreground">
               Comma-separated keywords to include in generated content
@@ -224,7 +224,7 @@ export default function UniversitySettings() {
               id="brand-guidelines"
               placeholder="Describe your brand's personality, values, and key messaging..."
               className="min-h-[100px]"
-              defaultValue="Our brand is focused on empowering university students with the tools they need to succeed in social media marketing."
+              defaultValue="Our brand is focused on helping organizations succeed in social media marketing with powerful content creation tools."
             />
           </div>
 

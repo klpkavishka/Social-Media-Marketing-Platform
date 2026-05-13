@@ -10,3 +10,4 @@ scikit-learn==1.5.2
 h5py==3.11.0
 optree==0.18.0
 rich==14.1.0
+requests>=2.31.0

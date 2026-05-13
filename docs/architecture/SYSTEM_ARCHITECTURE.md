@@ -2,7 +2,7 @@
 
 ## 1. Architecture Overview
 
-UniSocial follows a **microservices-based architecture** with clear separation of concerns, enabling independent scaling, deployment, and maintenance of different components.
+AI Social Platform follows a **microservices-based architecture** with clear separation of concerns, enabling independent scaling, deployment, and maintenance of different components.
 
 ### Architecture Style
 
@@ -272,7 +272,7 @@ upstream backend {
 
 server {
     listen 443 ssl http2;
-    server_name api.unisocial.com;
+    server_name api.ai-social-platform.com;
 
     ssl_certificate /etc/ssl/certs/cert.pem;
     ssl_certificate_key /etc/ssl/private/key.pem;
@@ -646,7 +646,7 @@ export class ContentPublishProcessor {
 
 **Schema Design**:
 
-- **Multi-tenancy**: `university_id` in all tables
+- **Multi-tenancy**: `organization_id` in all tables
 - **Soft deletes**: `deleted_at` timestamp
 - **Audit fields**: `created_at`, `updated_at`, `created_by`, `updated_by`
 
@@ -701,9 +701,9 @@ export class ContentPublishProcessor {
 
 **Buckets**:
 
-- `unisocial-media-{env}`: User-uploaded media
-- `unisocial-backups-{env}`: Database backups
-- `unisocial-static-{env}`: Static assets
+- `ai-social-platform-media-{env}`: User-uploaded media
+- `ai-social-platform-backups-{env}`: Database backups
+- `ai-social-platform-static-{env}`: Static assets
 
 **Lifecycle Policies**:
 
@@ -719,7 +719,7 @@ export class ContentPublishProcessor {
 - Edge locations: All AWS regions
 - Cache TTL: 1 hour for media, 1 day for static
 - HTTPS only
-- Custom domain: `cdn.unisocial.com`
+- Custom domain: `cdn.ai-social-platform.com`
 
 ---
 
@@ -752,7 +752,7 @@ export class ContentPublishProcessor {
 **Cost Management**:
 
 - Response caching (24 hours)
-- Rate limiting per university
+- Rate limiting per organization
 - Batch processing where possible
 
 ---
@@ -905,7 +905,7 @@ spec:
 
 **Read Replicas**: 2-3 read replicas for PostgreSQL
 
-**Sharding Strategy**: Shard by `university_id`
+**Sharding Strategy**: Shard by `organization_id`
 
 **Connection Pooling**: PgBouncer with max 100 connections per instance
 
@@ -938,8 +938,8 @@ Docker Compose:
 
 ```yaml
 Namespaces:
-  - unisocial-prod
-  - unisocial-staging
+  - ai-social-platform-prod
+  - ai-social-platform-staging
 
 Services:
   - frontend (3 replicas)
@@ -1070,4 +1070,4 @@ Add GraphQL layer for:
 
 ---
 
-This architecture provides a solid foundation for a scalable, maintainable, and performant university social media management platform.
+This architecture provides a solid foundation for a scalable, maintainable, and performant enterprise social media management platform.

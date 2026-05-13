@@ -1,4 +1,4 @@
-# Project Summary - UniSocial Platform
+# Project Summary - AI Social Platform
 
 ## ✅ What Has Been Completed
 
@@ -248,7 +248,7 @@ mkdir -p app/{services,models,routers,utils}
    ```bash
    # Clone repository
    git clone <repo-url>
-   cd unisocial
+   cd ai-social-platform
 
    # Copy environment variables
    cp .env.example .env

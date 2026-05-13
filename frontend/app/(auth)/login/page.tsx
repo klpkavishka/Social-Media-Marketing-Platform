@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LogIn, Shield, Sparkles, ArrowRight, AlertCircle } from 'lucide-react'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import { SocialLoginButtons } from '@/components/auth/social-login'
 
 export default function LoginPage() {
   const router = useRouter()
   const { user, isLoading } = useUser()
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rememberMe, setRememberMe] = useState(false)
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') || '/dashboard'
 
@@ -88,7 +90,7 @@ export default function LoginPage() {
           <Shield className="h-7 w-7 text-white" />
         </div>
         <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
-        <p className="mt-2 text-blue-200/70">Sign in to your UniSocial account</p>
+        <p className="mt-2 text-blue-200/70">Sign in to your account</p>
       </div>
 
       {/* Card */}
@@ -124,6 +126,11 @@ export default function LoginPage() {
           ))}
         </div>
 
+        {/* Social Login */}
+        <div className="mb-6">
+          <SocialLoginButtons isLoading={isRedirecting} />
+        </div>
+
         <button
           onClick={handleLogin}
           disabled={isRedirecting}
@@ -157,9 +164,20 @@ export default function LoginPage() {
           )}
         </button>
 
+        {/* Remember Me Checkbox */}
+        <label className="flex items-center gap-2 mt-4">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 rounded border-white/20 cursor-pointer"
+          />
+          <span className="text-sm text-blue-200/70">Remember me for 30 days</span>
+        </label>
+
         <div className="my-6 flex items-center gap-4">
           <div className="h-px flex-1 bg-white/10" />
-          <span className="text-xs text-blue-200/40">New to UniSocial?</span>
+          <span className="text-xs text-blue-200/40">New here?</span>
           <div className="h-px flex-1 bg-white/10" />
         </div>
 

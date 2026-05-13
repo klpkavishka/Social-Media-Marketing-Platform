@@ -13,6 +13,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TeamMemberCard } from '@/components/common/team-member-card'
 import { InviteMemberDialog } from '@/components/common/invite-member-dialog'
+import { TeamBulkActions } from '@/components/team/team-bulk-actions'
+import { TeamActivityLog, type TeamActivity } from '@/components/team/team-activity-log'
+import { SocialAccount, AccountMetrics, SocialPlatform } from '@/lib/types/social'
 import { TeamMember, InviteTeamMemberData, DEFAULT_PERMISSIONS } from '@/lib/types/team'
 import { useAuth } from '@/lib/hooks/use-auth'
 import {
@@ -28,17 +31,19 @@ import {
   UserX,
   Download,
 } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
+import { Tooltip } from '@/components/tooltip'
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
   {
     id: '1',
-    email: 'sarah.johnson@university.edu',
+    email: 'sarah.johnson@company.com',
     firstName: 'Sarah',
     lastName: 'Johnson',
     role: 'admin',
     status: 'active',
-    universityId: 'univ-1',
+    organizationId: 'org-1',
     department: 'Marketing',
     lastActive: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
     joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString(),
@@ -47,12 +52,12 @@ const mockTeamMembers: TeamMember[] = [
   },
   {
     id: '2',
-    email: 'michael.chen@university.edu',
+    email: 'michael.chen@company.com',
     firstName: 'Michael',
     lastName: 'Chen',
     role: 'manager',
     status: 'active',
-    universityId: 'univ-1',
+    organizationId: 'org-1',
     department: 'Communications',
     lastActive: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
     joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString(),
@@ -61,12 +66,12 @@ const mockTeamMembers: TeamMember[] = [
   },
   {
     id: '3',
-    email: 'emily.rodriguez@university.edu',
+    email: 'emily.rodriguez@company.com',
     firstName: 'Emily',
     lastName: 'Rodriguez',
     role: 'creator',
     status: 'active',
-    universityId: 'univ-1',
+    organizationId: 'org-1',
     department: 'Social Media',
     lastActive: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
     joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString(),
@@ -75,12 +80,12 @@ const mockTeamMembers: TeamMember[] = [
   },
   {
     id: '4',
-    email: 'david.kim@university.edu',
+    email: 'david.kim@company.com',
     firstName: 'David',
     lastName: 'Kim',
     role: 'analyst',
     status: 'active',
-    universityId: 'univ-1',
+    organizationId: 'org-1',
     department: 'Analytics',
     lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
     joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
@@ -89,12 +94,12 @@ const mockTeamMembers: TeamMember[] = [
   },
   {
     id: '5',
-    email: 'jessica.brown@university.edu',
+    email: 'jessica.brown@company.com',
     firstName: 'Jessica',
     lastName: 'Brown',
     role: 'creator',
     status: 'invited',
-    universityId: 'univ-1',
+    organizationId: 'org-1',
     department: 'Content',
     invitedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     invitedBy: '1',
@@ -102,17 +107,70 @@ const mockTeamMembers: TeamMember[] = [
   },
   {
     id: '6',
-    email: 'alex.turner@university.edu',
+    email: 'alex.turner@company.com',
     firstName: 'Alex',
     lastName: 'Turner',
     role: 'manager',
     status: 'active',
-    universityId: 'univ-1',
+    organizationId: 'org-1',
     department: 'Marketing',
     lastActive: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
     joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 120).toISOString(),
     permissions: DEFAULT_PERMISSIONS.manager,
     avatarUrl: 'https://ui-avatars.com/api/?name=Alex+Turner&background=random',
+  },
+]
+
+// Mock activity data
+const mockActivities: TeamActivity[] = [
+  {
+    id: '1',
+    memberId: '1',
+    memberName: 'Sarah Johnson',
+    memberEmail: 'sarah.johnson@company.com',
+    memberAvatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=random',
+    type: 'login',
+    description: 'Logged in from Chrome on MacOS',
+    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+  },
+  {
+    id: '2',
+    memberId: '2',
+    memberName: 'Michael Chen',
+    memberEmail: 'michael.chen@company.com',
+    memberAvatar: 'https://ui-avatars.com/api/?name=Michael+Chen&background=random',
+    type: 'role_changed',
+    description: 'Role changed from creator to manager',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+  },
+  {
+    id: '3',
+    memberId: '3',
+    memberName: 'Emily Rodriguez',
+    memberEmail: 'emily.rodriguez@company.com',
+    memberAvatar: 'https://ui-avatars.com/api/?name=Emily+Rodriguez&background=random',
+    type: 'edit',
+    description: 'Updated profile information',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
+  },
+  {
+    id: '4',
+    memberId: '5',
+    memberName: 'Jessica Brown',
+    memberEmail: 'jessica.brown@company.com',
+    type: 'invited',
+    description: 'Invited to organization as Creator',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+  },
+  {
+    id: '5',
+    memberId: '6',
+    memberName: 'Alex Turner',
+    memberEmail: 'alex.turner@company.com',
+    memberAvatar: 'https://ui-avatars.com/api/?name=Alex+Turner&background=random',
+    type: 'permission_updated',
+    description: 'Permissions updated: canManageSettings enabled',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
   },
 ]
 
@@ -123,6 +181,7 @@ export default function TeamPage() {
   const [statusFilters, setStatusFilters] = useState<string[]>([])
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers)
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
 
   // Filter and search team members
   const filteredMembers = useMemo(() => {
@@ -173,7 +232,7 @@ export default function TeamPage() {
       id: `temp-${Date.now()}`,
       ...data,
       status: 'invited',
-      universityId: 'univ-1',
+      organizationId: 'org-1',
       invitedAt: new Date().toISOString(),
       invitedBy: user?.id || '1',
       permissions: data.permissions ? { ...DEFAULT_PERMISSIONS[data.role], ...data.permissions } : DEFAULT_PERMISSIONS[data.role],
@@ -216,6 +275,49 @@ export default function TeamPage() {
     )
   }
 
+  const handleMemberSelection = (memberId: string, selected: boolean) => {
+    const newSelected = new Set(selectedMembers)
+    if (selected) {
+      newSelected.add(memberId)
+    } else {
+      newSelected.delete(memberId)
+    }
+    setSelectedMembers(newSelected)
+  }
+
+  const handleBulkDelete = () => {
+    setTeamMembers(teamMembers.filter((m) => !selectedMembers.has(m.id)))
+    setSelectedMembers(new Set())
+  }
+
+  const handleBulkChangeRole = () => {
+    console.log('Change role for members:', Array.from(selectedMembers))
+    // TODO: Implement bulk role change
+  }
+
+  const handleBulkExport = () => {
+    const selectedMembersList = teamMembers.filter((m) => selectedMembers.has(m.id))
+    const csv = [
+      ['Name', 'Email', 'Role', 'Status', 'Department'],
+      ...selectedMembersList.map((m) => [
+        `${m.firstName} ${m.lastName}`,
+        m.email,
+        m.role,
+        m.status,
+        m.department || '',
+      ]),
+    ]
+      .map((row) => row.join(','))
+      .join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `team-members-${Date.now()}.csv`
+    a.click()
+  }
+
   const exportTeamList = () => {
     // TODO: Implement export functionality
     console.log('Export team list')
@@ -246,48 +348,56 @@ export default function TeamPage() {
 
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
-            <Users className="h-4 w-4" />
-            <p className="text-sm">Total Members</p>
-          </div>
-          <p className="text-2xl font-bold">{stats.totalMembers}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
-            <CheckCircle className="h-4 w-4" />
-            <p className="text-sm">Active Members</p>
-          </div>
-          <p className="text-2xl font-bold text-green-600">{stats.activeMembers}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
-            <Clock className="h-4 w-4" />
-            <p className="text-sm">Pending Invites</p>
-          </div>
-          <p className="text-2xl font-bold text-yellow-600">{stats.pendingInvites}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <p className="text-sm text-muted-foreground mb-1">By Role</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-center gap-1">
-              <Crown className="h-3 w-3 text-purple-600" />
-              <span className="text-muted-foreground">{stats.byRole.admin}</span>
+        <Tooltip content="Total number of team members in your workspace" side="top">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Users className="h-4 w-4" />
+              <p className="text-sm">Total Members</p>
             </div>
-            <div className="flex items-center gap-1">
-              <Users className="h-3 w-3 text-blue-600" />
-              <span className="text-muted-foreground">{stats.byRole.manager}</span>
+            <p className="text-2xl font-bold">{stats.totalMembers}</p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Team members who have accepted their invitation" side="top">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <CheckCircle className="h-4 w-4" />
+              <p className="text-sm">Active Members</p>
             </div>
-            <div className="flex items-center gap-1">
-              <FileText className="h-3 w-3 text-green-600" />
-              <span className="text-muted-foreground">{stats.byRole.creator}</span>
+            <p className="text-2xl font-bold text-green-600">{stats.activeMembers}</p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Invitations sent but not yet accepted" side="top">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Clock className="h-4 w-4" />
+              <p className="text-sm">Pending Invites</p>
             </div>
-            <div className="flex items-center gap-1">
-              <BarChart className="h-3 w-3 text-orange-600" />
-              <span className="text-muted-foreground">{stats.byRole.analyst}</span>
+            <p className="text-2xl font-bold text-yellow-600">{stats.pendingInvites}</p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Distribution of team members across roles" side="top">
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-sm text-muted-foreground mb-1">By Role</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="flex items-center gap-1">
+                <Crown className="h-3 w-3 text-purple-600" />
+                <span className="text-muted-foreground">{stats.byRole.admin}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3 text-blue-600" />
+                <span className="text-muted-foreground">{stats.byRole.manager}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FileText className="h-3 w-3 text-green-600" />
+                <span className="text-muted-foreground">{stats.byRole.creator}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <BarChart className="h-3 w-3 text-orange-600" />
+                <span className="text-muted-foreground">{stats.byRole.analyst}</span>
+              </div>
             </div>
           </div>
-        </div>
+        </Tooltip>
       </div>
 
       {/* Search and Filters */}
@@ -393,21 +503,24 @@ export default function TeamPage() {
 
       {/* Team Members Grid */}
       {filteredMembers.length === 0 ? (
-        <div className="text-center py-12">
-          <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No team members found</h3>
-          <p className="text-muted-foreground">
-            {searchQuery || roleFilters.length > 0 || statusFilters.length > 0
-              ? 'Try adjusting your filters or search query'
-              : 'Get started by inviting your first team member'}
-          </p>
-          {!searchQuery && roleFilters.length === 0 && statusFilters.length === 0 && (
-            <Button onClick={() => setInviteDialogOpen(true)} className="mt-4 gap-2">
-              <UserPlus className="h-4 w-4" />
-              Invite Member
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          title="No team members found"
+          description={
+            searchQuery || roleFilters.length > 0 || statusFilters.length > 0
+              ? 'Try adjusting your filters or search query to find team members'
+              : 'Get started by inviting your first team member to collaborate'
+          }
+          action={
+            !searchQuery && roleFilters.length === 0 && statusFilters.length === 0
+              ? {
+                  label: 'Invite Member',
+                  onClick: () => setInviteDialogOpen(true),
+                  icon: <UserPlus className="h-4 w-4" />,
+                }
+              : undefined
+          }
+          icon={<Users className="h-16 w-16" />}
+        />
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -416,6 +529,8 @@ export default function TeamPage() {
                 key={member.id}
                 member={member}
                 currentUserId={user?.id}
+                isSelected={selectedMembers.has(member.id)}
+                onSelectionChange={handleMemberSelection}
                 onEdit={handleEdit}
                 onRemove={handleRemove}
                 onResendInvite={handleResendInvite}
@@ -429,6 +544,23 @@ export default function TeamPage() {
           </div>
         </>
       )}
+
+      {/* Bulk Actions Bar */}
+      {selectedMembers.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          <div className="mx-4 mb-4">
+            <TeamBulkActions
+              selectedCount={selectedMembers.size}
+              onDelete={handleBulkDelete}
+              onChangeRole={handleBulkChangeRole}
+              onExport={handleBulkExport}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Activity Log */}
+      <TeamActivityLog activities={mockActivities} limit={5} />
 
       {/* Invite Member Dialog */}
       <InviteMemberDialog

@@ -2,7 +2,7 @@
 
 ## 1. Data Requirements Overview
 
-UniSocial requires various types of data to function effectively:
+AI Social Platform requires various types of data to function effectively:
 
 - **Operational Data**: User-generated content, campaigns, schedules
 - **Social Media Data**: Engagement metrics, follower data, platform analytics
@@ -78,12 +78,12 @@ UniSocial requires various types of data to function effectively:
 - Content classification
 - Toxicity detection
 
-#### b) Marketing & University Datasets
+#### b) Marketing & Enterprise Datasets
 
 **Source**: Kaggle, Academic repositories
 **Datasets**:
 
-- University social media posts (public)
+- Organization social media posts (public)
 - Higher education marketing campaigns
 - Student engagement patterns
 
@@ -568,7 +568,7 @@ const contentSchema = z.object({
 **Levels**:
 
 1. **System Access**: Backend services only
-2. **Admin Access**: Full university data access
+2. **Admin Access**: Full organization data access
 3. **User Access**: Role-based, limited to own content
 4. **API Access**: Authenticated, rate-limited
 

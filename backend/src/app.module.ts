@@ -39,7 +39,7 @@ import { HashtagsModule } from './modules/hashtags/hashtags.module';
         port: configService.get('DB_PORT', 5432),
         username: configService.get('DB_USERNAME', 'postgres'),
         password: configService.get('DB_PASSWORD', 'postgres'),
-        database: configService.get('DB_DATABASE', 'unisocial'),
+        database: configService.get('DB_DATABASE', 'ai_social_platform'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
@@ -55,7 +55,7 @@ import { HashtagsModule } from './modules/hashtags/hashtags.module';
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>(
           'MONGODB_URI',
-          'mongodb://localhost:27017/unisocial-analytics',
+          'mongodb://localhost:27017/ai_social_platform_analytics',
         ),
         retryAttempts: 3,
         retryDelay: 3000,

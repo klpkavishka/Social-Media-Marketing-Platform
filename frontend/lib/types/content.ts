@@ -7,7 +7,7 @@ export interface Content {
   platforms: Platform[]
   mediaUrls: string[]
   createdBy: string
-  universityId: string
+  organizationId: string
   createdAt: string
   updatedAt: string
 }

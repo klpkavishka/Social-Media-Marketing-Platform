@@ -11,7 +11,7 @@ export const authApi = {
   updateProfile: (data: {
     firstName?: string
     lastName?: string
-    universityName?: string
+    organizationName?: string
     department?: string
     jobTitle?: string
   }) => apiClient.patch('/auth/profile', data),

@@ -68,7 +68,7 @@ All shadcn/ui components created:
 
 ### ✅ TypeScript Types (4 type files)
 
-- ✅ `user.ts` - User and University types
+- ✅ `user.ts` - User and Organization types
 - ✅ `content.ts` - Content and Platform types
 - ✅ `campaign.ts` - Campaign types
 - ✅ `analytics.ts` - Analytics event types

@@ -147,7 +147,7 @@ Should return data, not a connection error.
 
 **Check 2: Are the database tables created?**
 ```bash
-psql -U postgres -d unisocial -h localhost -c "\dt"
+psql -U postgres -d ai_social_platform -h localhost -c "\dt"
 ```
 Look for `contents` and `campaigns` tables.
 
@@ -197,7 +197,7 @@ JWT_EXPIRES_IN=1d
 ```
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8000
-NEXT_PUBLIC_APP_NAME=UniSocial
+NEXT_PUBLIC_APP_NAME=AI Social Platform
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 

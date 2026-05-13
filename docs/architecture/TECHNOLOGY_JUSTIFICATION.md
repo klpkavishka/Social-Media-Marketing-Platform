@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This document provides detailed justifications for each technology choice in the UniSocial platform, explaining how they address specific requirements and constraints.
+This document provides detailed justifications for each technology choice in the AI Social Platform, explaining how they address specific requirements and constraints.
 
 ---
 
@@ -141,7 +141,7 @@ This document provides detailed justifications for each technology choice in the
 ✅ **Customization**
 
 - Easy theming
-- University brand colors
+- Customizable brand colors
 - Responsive design system
 
 ✅ **Production Performance**
@@ -367,7 +367,7 @@ This document provides detailed justifications for each technology choice in the
 - Large community
 - Extensive tooling
 
-**Use Cases in UniSocial**:
+**Use Cases in AI Social Platform**:
 
 - User accounts and authentication
 - Content management
@@ -544,7 +544,7 @@ This document provides detailed justifications for each technology choice in the
 **Cost Management**:
 
 - Response caching (24h)
-- Rate limiting per university
+- Rate limiting per organization
 - Fallback to cheaper models
 
 **Alternatives**:
@@ -860,7 +860,7 @@ This document provides detailed justifications for each technology choice in the
 - **Monitoring**: $0 (self-hosted)
 - **Total**: $1,200-2,650/month
 
-**Per University**: $120-265/month
+**Per Organization**: $120-265/month
 
 ### 10.2 Scaling Costs
 
@@ -880,4 +880,4 @@ As the platform grows, costs scale linearly with usage:
 
 ---
 
-This technology stack provides a solid, scalable, and cost-effective foundation for the UniSocial platform while following industry best practices.
+This technology stack provides a solid, scalable, and cost-effective foundation for the AI Social Platform while following industry best practices.
