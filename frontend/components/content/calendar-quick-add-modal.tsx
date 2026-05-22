@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react'
+import { Facebook, Instagram, Linkedin, Twitter, Sparkles, Image as ImageIcon, Loader2 } from 'lucide-react'
 
 interface CalendarQuickAddModalProps {
   open: boolean
@@ -17,7 +17,15 @@ interface CalendarQuickAddModalProps {
     preview: string
     platforms: ('facebook' | 'instagram' | 'twitter' | 'linkedin')[]
     scheduledDate: Date
+    generationId?: string
   }) => void
+}
+
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function CalendarQuickAddModal({
@@ -33,10 +41,62 @@ export function CalendarQuickAddModal({
   )
   const [scheduleType, setScheduleType] = useState<'now' | 'schedule'>('schedule')
   const [scheduledDate, setScheduledDate] = useState(
-    selectedDate.toISOString().split('T')[0]
+    formatLocalDate(selectedDate)
   )
   const [scheduledTime, setScheduledTime] = useState('12:00')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Generations State
+  const [generations, setGenerations] = useState<any[]>([])
+  const [isLoadingGenerations, setIsLoadingGenerations] = useState(false)
+  const [selectedGenerationId, setSelectedGenerationId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      // Reset date when opened with new date
+      setScheduledDate(formatLocalDate(selectedDate))
+      
+      // Fetch generations
+      const fetchGenerations = async () => {
+        setIsLoadingGenerations(true)
+        try {
+          const response = await fetch('/api/hashtags/generations')
+          if (response.ok) {
+            const data = await response.json()
+            setGenerations(data)
+          }
+        } catch (error) {
+          console.error('Error fetching generations:', error)
+        } finally {
+          setIsLoadingGenerations(false)
+        }
+      }
+      fetchGenerations()
+    } else {
+      // Reset form when closed
+      setTitle('')
+      setPreview('')
+      setSelectedPlatforms(new Set(['instagram', 'facebook']))
+      setScheduleType('schedule')
+      setScheduledTime('12:00')
+      setSelectedGenerationId(null)
+    }
+  }, [open, selectedDate])
+
+  const handleSelectGeneration = (gen: any) => {
+    if (selectedGenerationId === gen._id) {
+      setSelectedGenerationId(null)
+      setPreview('')
+    } else {
+      setSelectedGenerationId(gen._id)
+      if (gen.finalCaption) {
+        setPreview(gen.finalCaption)
+      }
+      if (!title) {
+        setTitle(`Post for ${gen.imageFilename || 'Image'}`)
+      }
+    }
+  }
 
   const platforms: Array<'facebook' | 'instagram' | 'twitter' | 'linkedin'> = [
     'facebook',
@@ -70,22 +130,17 @@ export function CalendarQuickAddModal({
     setIsSubmitting(true)
     try {
       const [hours, minutes] = scheduledTime.split(':').map(Number)
-      const postDate = new Date(scheduledDate)
-      postDate.setHours(hours, minutes)
+      const [year, month, day] = scheduledDate.split('-').map(Number)
+      const postDate = new Date(year, month - 1, day, hours, minutes)
 
       onAdd?.({
         title: title.trim(),
         preview: preview.trim(),
         platforms: Array.from(selectedPlatforms),
-        scheduledDate: postDate
+        scheduledDate: postDate,
+        generationId: selectedGenerationId || undefined
       })
 
-      // Reset form
-      setTitle('')
-      setPreview('')
-      setSelectedPlatforms(new Set(['instagram', 'facebook']))
-      setScheduleType('schedule')
-      setScheduledTime('12:00')
       onOpenChange(false)
     } finally {
       setIsSubmitting(false)
@@ -100,15 +155,67 @@ export function CalendarQuickAddModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-xl">✨</span>
             Quick Add Post
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Quickly add a scheduled social media post by entering the title, caption, platforms, and date.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-5 py-2">
+          {/* Library Selector */}
+          <div className="space-y-3">
+            <Label className="font-semibold flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-violet-500" />
+              Attach from AI Library (Optional)
+            </Label>
+            
+            {isLoadingGenerations ? (
+              <div className="flex items-center justify-center p-4 border rounded-lg bg-muted/20">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : generations.length > 0 ? (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                {generations.map((gen) => (
+                  <button
+                    key={gen._id}
+                    onClick={() => handleSelectGeneration(gen)}
+                    className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all group ${
+                      selectedGenerationId === gen._id
+                        ? 'border-violet-500 ring-2 ring-violet-500/20 shadow-md scale-105'
+                        : 'border-transparent hover:border-violet-300'
+                    }`}
+                  >
+                    {gen.imageBase64 ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={gen.imageBase64} alt="Library" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <Sparkles className="h-6 w-6 text-muted-foreground/30" />
+                      </div>
+                    )}
+                    
+                    {selectedGenerationId === gen._id && (
+                      <div className="absolute inset-0 bg-violet-500/20 flex items-center justify-center">
+                        <div className="bg-violet-600 text-white rounded-full p-1 shadow-sm">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/20">
+                No saved generations found. You can still create a text post.
+              </div>
+            )}
+          </div>
+
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title" className="font-semibold">
@@ -126,7 +233,7 @@ export function CalendarQuickAddModal({
           {/* Preview */}
           <div className="space-y-2">
             <Label htmlFor="preview" className="font-semibold">
-              Preview Text
+              Caption
             </Label>
             <Textarea
               id="preview"
@@ -166,62 +273,33 @@ export function CalendarQuickAddModal({
             </div>
           </div>
 
-          {/* Schedule Type */}
-          <div className="space-y-3">
-            <Label className="font-semibold">Schedule</Label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setScheduleType('now')}
-                className={`flex-1 p-2 rounded-lg border-2 transition-all text-sm ${
-                  scheduleType === 'now'
-                    ? 'border-violet-500 bg-violet-50 dark:bg-violet-950'
-                    : 'border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                Publish Now
-              </button>
-              <button
-                onClick={() => setScheduleType('schedule')}
-                className={`flex-1 p-2 rounded-lg border-2 transition-all text-sm ${
-                  scheduleType === 'schedule'
-                    ? 'border-violet-500 bg-violet-50 dark:bg-violet-950'
-                    : 'border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                Schedule
-              </button>
+          {/* Date & Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-sm">
+                Date
+              </Label>
+              <Input
+                id="date"
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                className="border-slate-300 dark:border-slate-600"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time" className="text-sm">
+                Time
+              </Label>
+              <Input
+                id="time"
+                type="time"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
+                className="border-slate-300 dark:border-slate-600"
+              />
             </div>
           </div>
-
-          {/* Date & Time (if scheduled) */}
-          {scheduleType === 'schedule' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm">
-                  Date
-                </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
-                  className="border-slate-300 dark:border-slate-600"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="time" className="text-sm">
-                  Time
-                </Label>
-                <Input
-                  id="time"
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
-                  className="border-slate-300 dark:border-slate-600"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
@@ -237,7 +315,7 @@ export function CalendarQuickAddModal({
             disabled={!title.trim() || selectedPlatforms.size === 0 || isSubmitting}
             className="bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700"
           >
-            {isSubmitting ? 'Adding...' : 'Add Post'}
+            {isSubmitting ? 'Scheduling...' : 'Schedule Post'}
           </Button>
         </DialogFooter>
       </DialogContent>

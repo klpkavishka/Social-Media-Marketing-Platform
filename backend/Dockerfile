@@ -34,9 +34,8 @@ COPY --from=builder /app/dist ./dist
 # Expose port
 EXPOSE 4000
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:4000/api', (res) => {if (res.statusCode !== 200) throw new Error(res.statusCode)})" || exit 1
+    CMD node -e "require('http').get('http://localhost:4000/api', (res) => {if (res.statusCode !== 200) { throw new Error(res.statusCode); } else { process.exit(0); }})" || exit 1
 
 # Run application
 CMD ["node", "dist/main.js"]

@@ -1,15 +1,22 @@
 import { Injectable, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import axios, { AxiosInstance } from 'axios';
 import FormData from 'form-data';
-import { HashtagPredictionDto, CaptionResultDto } from './dto';
+import { HashtagPredictionDto, CaptionResultDto, CreateGenerationDto } from './dto';
+import { Generation, GenerationDocument } from './schemas/generation.schema';
 
 @Injectable()
 export class HashtagsService {
   private readonly logger = new Logger(HashtagsService.name);
   private readonly ai: AxiosInstance;
 
-  constructor(private config: ConfigService) {
+  constructor(
+    private config: ConfigService,
+    @InjectModel(Generation.name)
+    private generationModel: Model<GenerationDocument>,
+  ) {
     this.ai = axios.create({
       baseURL: this.config.get('AI_SERVICE_URL', 'http://localhost:8000'),
       timeout: 60_000, // Increased timeout for OpenRouter API calls
@@ -119,6 +126,63 @@ export class HashtagsService {
       }
 
       throw new ServiceUnavailableException('AI caption service unavailable');
+    }
+  }
+
+  /**
+   * Save a generation record in MongoDB
+   */
+  async saveGeneration(dto: CreateGenerationDto): Promise<GenerationDocument> {
+    try {
+      this.logger.log(`💾 Saving generation to MongoDB: ${dto.imageFilename}`);
+      const generation = new this.generationModel(dto);
+      return await generation.save();
+    } catch (error: any) {
+      this.logger.error(`❌ Failed to save generation: ${error.message}`);
+      throw new BadRequestException(`Failed to save generation: ${error.message}`);
+    }
+  }
+
+  /**
+   * Fetch all generations (newest first)
+   */
+  async getGenerations(): Promise<GenerationDocument[]> {
+    try {
+      this.logger.log(`🔍 Fetching all generations from MongoDB`);
+      return await this.generationModel.find().sort({ createdAt: -1 }).exec();
+    } catch (error: any) {
+      this.logger.error(`❌ Failed to fetch generations: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch a single generation by ID
+   */
+  async getGeneration(id: string): Promise<GenerationDocument | null> {
+    try {
+      this.logger.log(`🔍 Fetching generation by ID: ${id}`);
+      return await this.generationModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`❌ Failed to fetch generation ${id}: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a generation by ID
+   */
+  async deleteGeneration(id: string): Promise<{ success: boolean }> {
+    try {
+      this.logger.log(`🗑️ Deleting generation from MongoDB: ${id}`);
+      const result = await this.generationModel.findByIdAndDelete(id).exec();
+      if (!result) {
+        throw new BadRequestException(`Generation with ID ${id} not found`);
+      }
+      return { success: true };
+    } catch (error: any) {
+      this.logger.error(`❌ Failed to delete generation ${id}: ${error.message}`);
+      throw new BadRequestException(`Failed to delete generation: ${error.message}`);
     }
   }
 }

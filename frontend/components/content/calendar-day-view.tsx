@@ -14,11 +14,14 @@ interface ScheduledPost {
   engagement?: number
   reach?: number
   preview?: string
+  media?: Record<string, any>
+  imageBase64?: string
 }
 
 interface CalendarDayViewProps {
   posts?: ScheduledPost[]
-  onAddPost?: (date: Date, hour: number) => void
+  currentDate: Date
+  onAddPost?: (date: Date) => void
   onPostClick?: (post: ScheduledPost) => void
   onReschedule?: (post: ScheduledPost, newDateTime: Date) => void
 }
@@ -37,17 +40,8 @@ const platformBadgeColors = {
   linkedin: 'bg-blue-50 text-blue-700'
 }
 
-export function CalendarDayView({ posts = [], onAddPost, onPostClick, onReschedule }: CalendarDayViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 11))
+export function CalendarDayView({ posts = [], currentDate, onAddPost, onPostClick, onReschedule }: CalendarDayViewProps) {
   const [draggedPost, setDraggedPost] = useState<ScheduledPost | null>(null)
-
-  const prevDay = () => {
-    setCurrentDate(new Date(currentDate.getTime() - 24 * 60 * 60 * 1000))
-  }
-
-  const nextDay = () => {
-    setCurrentDate(new Date(currentDate.getTime() + 24 * 60 * 60 * 1000))
-  }
 
   const getPostsForHour = (hour: number) => {
     return posts.filter((post) => {
@@ -74,36 +68,6 @@ export function CalendarDayView({ posts = [], onAddPost, onPostClick, onReschedu
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-cyan-600 bg-clip-text text-transparent">
-            {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {dayPostsCount} {dayPostsCount === 1 ? 'post' : 'posts'} scheduled
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={prevDay}>
-            <ChevronLeft size={16} />
-          </Button>
-          {!isToday && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentDate(new Date())}
-              className="text-xs"
-            >
-              Today
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={nextDay}>
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
-
       {/* Day Timeline */}
       <div className="space-y-2">
         {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
@@ -138,12 +102,16 @@ export function CalendarDayView({ posts = [], onAddPost, onPostClick, onReschedu
                   e.currentTarget.classList.remove('ring-2', 'ring-violet-500')
                   if (draggedPost) {
                     const newDateTime = new Date(currentDate)
-                    newDateTime.setHours(hour)
+                    newDateTime.setHours(hour, 0, 0, 0)
                     onReschedule?.(draggedPost, newDateTime)
                     setDraggedPost(null)
                   }
                 }}
-                onClick={() => onAddPost?.(currentDate, hour)}
+                onClick={() => {
+                  const clickDate = new Date(currentDate)
+                  clickDate.setHours(hour, 0, 0, 0)
+                  onAddPost?.(clickDate)
+                }}
               >
                 {/* Posts in this hour */}
                 <div className="space-y-2">
@@ -162,42 +130,52 @@ export function CalendarDayView({ posts = [], onAddPost, onPostClick, onReschedu
                         'bg-slate-100'
                       } ${draggedPost?.id === post.id ? 'opacity-50 scale-95' : 'hover:shadow-md'}`}
                     >
-                      <div className="space-y-2">
-                        {/* Title and Status */}
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-sm flex-1">{post.title}</h4>
-                          <span className="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                            {post.status === 'in-review' ? 'In Review' : post.status}
-                          </span>
-                        </div>
-
-                        {/* Preview */}
-                        {post.preview && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{post.preview}</p>
+                      <div className="flex gap-4 items-start">
+                        {post.imageBase64 && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={post.imageBase64}
+                            alt="Preview"
+                            className="w-16 h-16 object-cover rounded border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm"
+                          />
                         )}
-
-                        {/* Platforms */}
-                        <div className="flex flex-wrap gap-1">
-                          {post.platforms.map((platform) => (
-                            <span
-                              key={platform}
-                              className={`text-xs px-2 py-1 rounded-full ${
-                                platformBadgeColors[platform as keyof typeof platformBadgeColors] ||
-                                'bg-slate-100 text-slate-700'
-                              }`}
-                            >
-                              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                        <div className="flex-1 space-y-2">
+                          {/* Title and Status */}
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-semibold text-sm flex-1">{post.title}</h4>
+                            <span className="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                              {post.status === 'in-review' ? 'In Review' : post.status}
                             </span>
-                          ))}
-                        </div>
-
-                        {/* Metrics */}
-                        {post.engagement !== undefined && (
-                          <div className="flex gap-4 text-xs text-muted-foreground pt-2 border-t">
-                            <div>❤️ {post.engagement} likes</div>
-                            <div>📈 {post.reach}K reach</div>
                           </div>
-                        )}
+
+                          {/* Preview */}
+                          {post.preview && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{post.preview}</p>
+                          )}
+
+                          {/* Platforms */}
+                          <div className="flex flex-wrap gap-1">
+                            {post.platforms.map((platform) => (
+                              <span
+                                key={platform}
+                                className={`text-xs px-2 py-1 rounded-full ${
+                                  platformBadgeColors[platform as keyof typeof platformBadgeColors] ||
+                                  'bg-slate-100 text-slate-700'
+                                }`}
+                              >
+                                {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Metrics */}
+                          {post.engagement !== undefined && (
+                            <div className="flex gap-4 text-xs text-muted-foreground pt-2 border-t">
+                              <div>❤️ {post.engagement} likes</div>
+                              <div>📈 {post.reach}K reach</div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -205,7 +183,18 @@ export function CalendarDayView({ posts = [], onAddPost, onPostClick, onReschedu
 
                 {/* Add Post Button (visible on hover) */}
                 {hourPosts.length === 0 && (
-                  <button className="opacity-0 group-hover:opacity-100 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full bg-violet-500 text-white hover:bg-violet-600 transition-all shadow-lg">
+                  <button
+                    type="button"
+                    title="Add post"
+                    aria-label="Add post"
+                    className="opacity-0 group-hover:opacity-100 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full bg-violet-500 text-white hover:bg-violet-600 transition-all shadow-lg"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const clickDate = new Date(currentDate)
+                      clickDate.setHours(hour, 0, 0, 0)
+                      onAddPost?.(clickDate)
+                    }}
+                  >
                     <Plus size={16} />
                   </button>
                 )}
@@ -222,3 +211,4 @@ export function CalendarDayView({ posts = [], onAddPost, onPostClick, onReschedu
     </div>
   )
 }
+

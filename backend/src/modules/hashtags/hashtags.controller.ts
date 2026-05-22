@@ -1,8 +1,8 @@
-import { Controller, Post, Body, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from '../../common/decorators/public.decorator';
 import { HashtagsService } from './hashtags.service';
-import { HashtagPredictionDto, CaptionResultDto } from './dto';
+import { HashtagPredictionDto, CaptionResultDto, CreateGenerationDto } from './dto';
 
 @Controller('hashtags')
 export class HashtagsController {
@@ -31,5 +31,41 @@ export class HashtagsController {
     @Body('category') category: string,
   ): Promise<CaptionResultDto> {
     return this.hashtagsService.generateCaption(file, tone, hashtags, category);
+  }
+
+  /**
+   * Save a generation record in MongoDB
+   */
+  @Public()
+  @Post('generations')
+  async saveGeneration(@Body() dto: CreateGenerationDto) {
+    return this.hashtagsService.saveGeneration(dto);
+  }
+
+  /**
+   * Get all saved generations
+   */
+  @Public()
+  @Get('generations')
+  async getGenerations() {
+    return this.hashtagsService.getGenerations();
+  }
+
+  /**
+   * Get a single saved generation by ID
+   */
+  @Public()
+  @Get('generations/:id')
+  async getGeneration(@Param('id') id: string) {
+    return this.hashtagsService.getGeneration(id);
+  }
+
+  /**
+   * Delete a saved generation by ID
+   */
+  @Public()
+  @Delete('generations/:id')
+  async deleteGeneration(@Param('id') id: string) {
+    return this.hashtagsService.deleteGeneration(id);
   }
 }

@@ -24,24 +24,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    // In development mode, allow requests without authentication
+    // In development mode, allow requests without authentication or with invalid tokens (bypass)
     if (process.env.NODE_ENV !== 'production') {
-      // Check if this is a public route
-      const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
-      
-      if (isPublic || !user) {
-        // Create a dev user for non-production environments
-        return user || { 
-          id: 'dev-user', 
-          email: 'dev@localhost',
-          role: 'content_creator', 
-          status: 'active',
-          isDeveloper: true,
-        };
-      }
+      return user || { 
+        id: 'dev-user', 
+        email: 'dev@localhost',
+        role: 'content_creator', 
+        status: 'active',
+        isDeveloper: true,
+      };
     }
 
     if (err || !user) {

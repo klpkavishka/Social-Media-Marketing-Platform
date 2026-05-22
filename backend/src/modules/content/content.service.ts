@@ -54,9 +54,13 @@ export class ContentService {
   }
 
   async getCalendar(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setUTCHours(23, 59, 59, 999);
+
     const contents = await this.contentRepository.find({
       where: {
-        scheduledDate: Between(new Date(startDate), new Date(endDate)),
+        scheduledDate: Between(start, end),
       },
       order: {
         scheduledDate: 'ASC',

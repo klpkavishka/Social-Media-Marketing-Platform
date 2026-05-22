@@ -13,11 +13,15 @@ interface ScheduledPost {
   scheduledDate: Date
   engagement?: number
   reach?: number
+  preview?: string
+  media?: Record<string, any>
+  imageBase64?: string
 }
 
 interface CalendarWeekViewProps {
   posts?: ScheduledPost[]
-  onAddPost?: (date: Date, hour: number) => void
+  currentDate: Date
+  onAddPost?: (date: Date) => void
   onPostClick?: (post: ScheduledPost) => void
   onReschedule?: (post: ScheduledPost, newDateTime: Date) => void
 }
@@ -40,8 +44,7 @@ const hours = [
   '10:00 PM'
 ]
 
-export function CalendarWeekView({ posts = [], onAddPost, onPostClick, onReschedule }: CalendarWeekViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 11))
+export function CalendarWeekView({ posts = [], currentDate, onAddPost, onPostClick, onReschedule }: CalendarWeekViewProps) {
   const [draggedPost, setDraggedPost] = useState<ScheduledPost | null>(null)
 
   const weekStart = useMemo(() => {
@@ -61,74 +64,30 @@ export function CalendarWeekView({ posts = [], onAddPost, onPostClick, onResched
     return days
   }, [weekStart])
 
-  const prevWeek = () => {
-    setCurrentDate(new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000))
-  }
-
-  const nextWeek = () => {
-    setCurrentDate(new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000))
-  }
-
   const getPostsForDateTime = (date: Date, hourIndex: number) => {
     const hour = parseInt(hours[hourIndex].split(':')[0])
+    const isPM = hours[hourIndex].includes('PM')
+    const actualHour = isPM && hour !== 12 ? hour + 12 : (!isPM && hour === 12 ? 0 : hour)
     return posts.filter((post) => {
       const postDate = new Date(post.scheduledDate)
       return (
         postDate.getFullYear() === date.getFullYear() &&
         postDate.getMonth() === date.getMonth() &&
         postDate.getDate() === date.getDate() &&
-        postDate.getHours() >= hour &&
-        postDate.getHours() < hour + 2
+        postDate.getHours() >= actualHour &&
+        postDate.getHours() < actualHour + 2
       )
     })
   }
 
-  const isCurrentWeek = useMemo(() => {
-    const today = new Date()
-    return (
-      weekDays[0] <= today &&
-      today < new Date(weekDays[6].getTime() + 24 * 60 * 60 * 1000)
-    )
-  }, [weekDays])
-
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-cyan-600 bg-clip-text text-transparent">
-            Week View
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {weekDays[0].toLocaleDateString()} - {weekDays[6].toLocaleDateString()}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={prevWeek}>
-            <ChevronLeft size={16} />
-          </Button>
-          {!isCurrentWeek && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentDate(new Date())}
-              className="text-xs"
-            >
-              This Week
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={nextWeek}>
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
-
       {/* Week Grid */}
       <div className="overflow-x-auto">
         <Card className="p-2">
           {/* Day Headers */}
           <div className="grid gap-1" style={{ gridTemplateColumns: `100px repeat(7, 1fr)` }}>
-            <div className="p-2 text-xs font-semibold text-muted-foreground">Time</div>
+            <div className="p-2 text-xs font-semibold text-muted-foreground flex items-center">Time</div>
             {weekDays.map((day) => {
               const isToday =
                 day.toDateString() === new Date().toDateString()
@@ -172,12 +131,21 @@ export function CalendarWeekView({ posts = [], onAddPost, onPostClick, onResched
                       if (draggedPost) {
                         const newDateTime = new Date(day)
                         const hourVal = parseInt(hour.split(':')[0])
-                        newDateTime.setHours(hourVal)
+                        const isPM = hour.includes('PM')
+                        const actualHour = isPM && hourVal !== 12 ? hourVal + 12 : (!isPM && hourVal === 12 ? 0 : hourVal)
+                        newDateTime.setHours(actualHour, 0, 0, 0)
                         onReschedule?.(draggedPost, newDateTime)
                         setDraggedPost(null)
                       }
                     }}
-                    onClick={() => onAddPost?.(day, hourIndex)}
+                    onClick={() => {
+                      const newDateTime = new Date(day)
+                      const hourVal = parseInt(hour.split(':')[0])
+                      const isPM = hour.includes('PM')
+                      const actualHour = isPM && hourVal !== 12 ? hourVal + 12 : (!isPM && hourVal === 12 ? 0 : hourVal)
+                      newDateTime.setHours(actualHour, 0, 0, 0)
+                      onAddPost?.(newDateTime)
+                    }}
                   >
                     {/* Posts for this time slot */}
                     <div className="space-y-1">
@@ -191,15 +159,23 @@ export function CalendarWeekView({ posts = [], onAddPost, onPostClick, onResched
                             e.stopPropagation()
                             onPostClick?.(post)
                           }}
-                          className={`p-1 rounded text-xs cursor-move group transition-all ${
+                          className={`p-1.5 rounded text-xs cursor-move group transition-all ${
                             platformColors[post.platforms[0] as keyof typeof platformColors] ||
                             'bg-slate-100'
                           } ${draggedPost?.id === post.id ? 'opacity-50 scale-95' : 'hover:shadow-md'}`}
                         >
-                          <div className="font-medium line-clamp-2 text-xs mb-0.5">
-                            {post.title}
+                          <div className="flex items-start gap-1.5 mb-0.5">
+                            {post.imageBase64 && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={post.imageBase64}
+                                alt="Preview"
+                                className="w-6 h-6 object-cover rounded border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm"
+                              />
+                            )}
+                            <span className="font-medium line-clamp-2 text-xs flex-1">{post.title}</span>
                           </div>
-                          <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                             {post.platforms.join(', ')}
                           </div>
                         </div>

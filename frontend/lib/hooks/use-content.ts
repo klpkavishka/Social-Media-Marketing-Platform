@@ -5,14 +5,20 @@ import { toast } from 'sonner'
 export function useContent(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery({
     queryKey: ['content', params],
-    queryFn: () => contentApi.getAll(params),
+    queryFn: async () => {
+      const response = await contentApi.getAll(params)
+      return response.data
+    },
   })
 }
 
 export function useContentById(id: string) {
   return useQuery({
     queryKey: ['content', id],
-    queryFn: () => contentApi.getById(id),
+    queryFn: async () => {
+      const response = await contentApi.getById(id)
+      return response.data
+    },
     enabled: !!id,
   })
 }
@@ -79,7 +85,10 @@ export function useGenerateCaption() {
 export function useCalendarContent(params: { startDate: string; endDate: string }) {
   return useQuery({
     queryKey: ['content', 'calendar', params],
-    queryFn: () => contentApi.getCalendar(params),
+    queryFn: async () => {
+      const response = await contentApi.getCalendar(params)
+      return response.data
+    },
     enabled: !!params.startDate && !!params.endDate,
   })
 }

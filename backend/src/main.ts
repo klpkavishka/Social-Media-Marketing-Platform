@@ -8,7 +8,15 @@ import { QueryFailedExceptionFilter } from './common/filters/query-failed.filter
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+  });
+
+  // Increase body parser limit for Base64 image payloads
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const bodyParser = require('body-parser');
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   
   // Get config service
   const configService = app.get(ConfigService);

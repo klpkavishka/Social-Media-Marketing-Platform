@@ -93,7 +93,7 @@ class ApiClient {
     }
 
     try {
-      const response = await fetch('/api/auth/token', {
+      const response = await fetch('/auth/access-token', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

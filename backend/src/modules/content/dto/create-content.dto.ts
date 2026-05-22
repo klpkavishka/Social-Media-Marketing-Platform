@@ -15,7 +15,6 @@ export class CreateContentDto {
   title: string;
 
   @IsString()
-  @MinLength(1)
   body: string;
 
   @IsEnum(ContentType)

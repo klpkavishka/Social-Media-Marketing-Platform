@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,7 +29,7 @@ import { CalendarWeekView } from '@/components/content/calendar-week-view'
 import { CalendarDayView } from '@/components/content/calendar-day-view'
 import { PlatformColorLegend } from '@/components/content/platform-color-legend'
 import { CalendarQuickAddModal } from '@/components/content/calendar-quick-add-modal'
-import { useCalendarContent, useDeleteContent } from '@/lib/hooks/use-content'
+import { useCalendarContent, useDeleteContent, useCreateContent } from '@/lib/hooks/use-content'
 
 interface Content {
   id: string
@@ -55,6 +55,8 @@ interface ScheduledPost {
   engagement?: number
   reach?: number
   preview?: string
+  media?: Record<string, unknown>
+  imageBase64?: string
 }
 
 type ViewMode = 'month' | 'week' | 'day'
@@ -67,6 +69,43 @@ export default function CalendarPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date())
+  const [generations, setGenerations] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('/api/hashtags/generations')
+      .then((res) => {
+        if (res.ok) return res.json()
+        throw new Error('Failed to fetch')
+      })
+      .then((data) => setGenerations(data))
+      .catch((err) => console.error('Error fetching generations:', err))
+  }, [])
+
+  const dateLabel = useMemo(() => {
+    if (viewMode === 'month') {
+      return currentDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      })
+    } else if (viewMode === 'week') {
+      const start = new Date(currentDate)
+      const day = start.getDay()
+      start.setDate(start.getDate() - day)
+      const end = new Date(start)
+      end.setDate(end.getDate() + 6)
+      
+      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      return `${startStr} - ${endStr}`
+    } else {
+      return currentDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    }
+  }, [currentDate, viewMode])
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string[]>([
@@ -106,6 +145,7 @@ export default function CalendarPage() {
   // Fetch calendar data
   const { data: calendarData, isLoading } = useCalendarContent(dateRange)
   const deleteContent = useDeleteContent()
+  const createContent = useCreateContent()
 
   // Filter content
   const filteredContent = useMemo(() => {
@@ -118,11 +158,23 @@ export default function CalendarPage() {
   }, [calendarData, statusFilter, platformFilter])
 
   const previousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
+    if (viewMode === 'month') {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+    } else if (viewMode === 'week') {
+      setCurrentDate(new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000))
+    } else {
+      setCurrentDate(new Date(currentDate.getTime() - 24 * 60 * 60 * 1000))
+    }
   }
 
   const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
+    if (viewMode === 'month') {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+    } else if (viewMode === 'week') {
+      setCurrentDate(new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000))
+    } else {
+      setCurrentDate(new Date(currentDate.getTime() + 24 * 60 * 60 * 1000))
+    }
   }
 
   const goToToday = () => {
@@ -151,34 +203,56 @@ export default function CalendarPage() {
 
   // Convert backend content to ScheduledPost format
   const scheduledPosts: ScheduledPost[] = useMemo(() => {
-    return filteredContent.map((content) => ({
-      id: content.id,
-      title: content.title,
-      platforms: (content.platforms || [])
-        .map((p: string) => p.toLowerCase() as 'facebook' | 'instagram' | 'twitter' | 'linkedin')
-        .filter((p: 'facebook' | 'instagram' | 'twitter' | 'linkedin') =>
-          ['facebook', 'instagram', 'twitter', 'linkedin'].includes(p)
-        ),
-      status: (content.status === 'scheduled' ? 'scheduled' : content.status) as
-        | 'scheduled'
-        | 'draft'
-        | 'published'
-        | 'in-review',
-      scheduledDate: new Date(content.scheduledDate || new Date()),
-      engagement: Math.floor(Math.random() * 500),
-      reach: Math.floor(Math.random() * 50),
-      preview: content.body
-    }))
-  }, [filteredContent])
+    const genMap: Record<string, string> = {}
+    generations.forEach((gen) => {
+      if (gen._id && gen.imageBase64) {
+        genMap[gen._id] = gen.imageBase64
+      }
+    })
+
+    return filteredContent.map((content) => {
+      const genId = (content.media as any)?.generationId
+      const imageBase64 = genId ? genMap[genId] : undefined
+
+      return {
+        id: content.id,
+        title: content.title,
+        platforms: (content.platforms || [])
+          .map((p: string) => p.toLowerCase() as 'facebook' | 'instagram' | 'twitter' | 'linkedin')
+          .filter((p: 'facebook' | 'instagram' | 'twitter' | 'linkedin') =>
+            ['facebook', 'instagram', 'twitter', 'linkedin'].includes(p)
+          ),
+        status: (content.status === 'scheduled' ? 'scheduled' : content.status) as
+          | 'scheduled'
+          | 'draft'
+          | 'published'
+          | 'in-review',
+        scheduledDate: new Date(content.scheduledDate || new Date()),
+        engagement: Math.floor(Math.random() * 500),
+        reach: Math.floor(Math.random() * 50),
+        preview: content.body,
+        media: content.media,
+        imageBase64
+      }
+    })
+  }, [filteredContent, generations])
 
   const handleAddPost = (post: {
     title: string
     preview: string
     platforms: ('facebook' | 'instagram' | 'twitter' | 'linkedin')[]
     scheduledDate: Date
+    generationId?: string
   }) => {
-    const params = `?scheduledDate=${post.scheduledDate.toISOString()}`
-    router.push(`/dashboard/content/new${params}`)
+    createContent.mutate({
+      title: post.title,
+      body: post.preview,
+      type: 'post',
+      status: 'scheduled',
+      platforms: post.platforms,
+      scheduledDate: post.scheduledDate.toISOString(),
+      media: post.generationId ? { generationId: post.generationId } : undefined
+    })
   }
 
   const handlePostClick = (post: ScheduledPost) => {
@@ -233,10 +307,7 @@ export default function CalendarPage() {
           <div className="flex items-center gap-2 px-3">
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             <span className="min-w-[160px] font-semibold">
-              {currentDate.toLocaleDateString('en-US', {
-                month: 'long',
-                year: 'numeric',
-              })}
+              {dateLabel}
             </span>
           </div>
         </div>
@@ -364,6 +435,7 @@ export default function CalendarPage() {
               <CardContent className="p-4">
                 <CalendarGridView
                   posts={scheduledPosts}
+                  currentDate={currentDate}
                   onAddPost={openQuickAdd}
                   onPostClick={handlePostClick}
                   onReschedule={handleReschedule}
@@ -378,6 +450,7 @@ export default function CalendarPage() {
               <CardContent className="p-4">
                 <CalendarWeekView
                   posts={scheduledPosts}
+                  currentDate={currentDate}
                   onAddPost={openQuickAdd}
                   onPostClick={handlePostClick}
                   onReschedule={handleReschedule}
@@ -392,6 +465,7 @@ export default function CalendarPage() {
               <CardContent className="p-4">
                 <CalendarDayView
                   posts={scheduledPosts}
+                  currentDate={currentDate}
                   onAddPost={openQuickAdd}
                   onPostClick={handlePostClick}
                   onReschedule={handleReschedule}

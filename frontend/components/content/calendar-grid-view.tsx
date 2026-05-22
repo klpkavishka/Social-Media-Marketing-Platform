@@ -14,10 +14,13 @@ interface ScheduledPost {
   engagement?: number
   reach?: number
   preview?: string
+  media?: Record<string, any>
+  imageBase64?: string
 }
 
 interface CalendarGridViewProps {
   posts?: ScheduledPost[]
+  currentDate: Date
   onAddPost?: (date: Date) => void
   onPostClick?: (post: ScheduledPost) => void
   onReschedule?: (post: ScheduledPost, newDate: Date) => void
@@ -44,8 +47,7 @@ const statusBadgeColors = {
   'in-review': 'bg-yellow-100 text-yellow-800'
 }
 
-export function CalendarGridView({ posts = [], onAddPost, onPostClick, onReschedule }: CalendarGridViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 11)) // May 11, 2026
+export function CalendarGridView({ posts = [], currentDate, onAddPost, onPostClick, onReschedule }: CalendarGridViewProps) {
   const [draggedPost, setDraggedPost] = useState<ScheduledPost | null>(null)
 
   const monthName = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })
@@ -53,9 +55,6 @@ export function CalendarGridView({ posts = [], onAddPost, onPostClick, onResched
   const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
   const daysInMonth = lastDay.getDate()
   const startingDayOfWeek = firstDay.getDay()
-
-  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
-  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
 
   const calendarDays = useMemo(() => {
     const days: (number | null)[] = []
@@ -91,29 +90,6 @@ export function CalendarGridView({ posts = [], onAddPost, onPostClick, onResched
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-cyan-600 bg-clip-text text-transparent">
-          {monthName}
-        </h2>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={prevMonth}>
-            <ChevronLeft size={16} />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentDate(new Date())}
-            className="text-xs"
-          >
-            Today
-          </Button>
-          <Button variant="outline" size="sm" onClick={nextMonth}>
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
-
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-1">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
@@ -156,6 +132,11 @@ export function CalendarGridView({ posts = [], onAddPost, onPostClick, onResched
                 setDraggedPost(null)
               }
             }}
+            onClick={() => {
+              if (day !== null) {
+                onAddPost?.(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))
+              }
+            }}
           >
             {day !== null && (
               <div className="space-y-2 h-full">
@@ -170,9 +151,10 @@ export function CalendarGridView({ posts = [], onAddPost, onPostClick, onResched
                   </span>
                   <button
                     onClick={() => onAddPost?.(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-                    className="opacity-0 hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                    className="opacity-40 hover:opacity-100 transition-opacity p-1 hover:bg-violet-100 dark:hover:bg-violet-900 rounded-full"
+                    title="Quick Add Post"
                   >
-                    <Plus size={14} className="text-muted-foreground" />
+                    <Plus size={16} className="text-violet-600 dark:text-violet-400 font-bold" />
                   </button>
                 </div>
 
@@ -184,16 +166,26 @@ export function CalendarGridView({ posts = [], onAddPost, onPostClick, onResched
                       draggable
                       onDragStart={() => setDraggedPost(post)}
                       onDragEnd={() => setDraggedPost(null)}
-                      onClick={() => onPostClick?.(post)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onPostClick?.(post)
+                      }}
                       className={`p-1.5 rounded text-xs cursor-move group transition-all ${
                         platformColors[post.platforms[0] as keyof typeof platformColors] ||
                         'bg-slate-100'
                       } ${draggedPost?.id === post.id ? 'opacity-50 scale-95' : 'hover:shadow-md'}`}
                     >
-                      <div className="flex items-start justify-between gap-1 mb-0.5">
+                      <div className="flex items-start gap-1.5 mb-0.5">
+                        {post.imageBase64 && (
+                          <img
+                            src={post.imageBase64}
+                            alt="Preview"
+                            className="w-6 h-6 object-cover rounded border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm"
+                          />
+                        )}
                         <span className="font-medium line-clamp-1 flex-1 text-xs">{post.title}</span>
                         <span
-                          className={`text-xs px-1 rounded whitespace-nowrap ${
+                          className={`text-[9px] px-1 rounded whitespace-nowrap ${
                             statusBadgeColors[post.status]
                           }`}
                         >

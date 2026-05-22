@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
-import { Sparkles, ArrowRight, Wand2, RefreshCw, Check, Brain } from 'lucide-react'
+import { Sparkles, ArrowRight, Wand2, RefreshCw, Check, Brain, Save } from 'lucide-react'
 import { PlatformSelector, ImageUploader, PostEditor, PostPreview } from '@/components/generator'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -34,6 +34,7 @@ export function GeneratorPage({ userName, userHandle, userAvatar }: GeneratorPag
   const [caption, setCaption] = useState('')
   const [hashtags, setHashtags] = useState<string[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Stage 1 results
   const [mlCategory, setMlCategory] = useState('')
@@ -160,6 +161,85 @@ export function GeneratorPage({ userName, userHandle, userAvatar }: GeneratorPag
       setHashtags(enhancedHashtags)
     }
     toast.success('Enhanced caption applied!')
+  }
+
+  // Compress image using canvas before converting to base64
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const canvas = document.createElement('canvas')
+        let { width, height } = img
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      img.onerror = reject
+      img.src = url
+    })
+  }
+
+  // Save generation to database
+  const handleSaveGeneration = async () => {
+    if (!selectedImage) {
+      toast.error('No image selected')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      // Compress and convert image to base64
+      const base64Image = await compressImage(selectedImage.file)
+
+      const payload = {
+        imageFilename: selectedImage.file.name,
+        imageSize: selectedImage.file.size,
+        platform: selectedPlatform,
+        imageBase64: base64Image,
+        // Stage 1
+        mlCategory: mlCategory || undefined,
+        mlCaption: caption,
+        mlHashtags: hashtags,
+
+        // Stage 2
+        enhancedCaption: enhancedCaption || undefined,
+        enhancedHashtags: enhancedHashtags.length > 0 ? enhancedHashtags : undefined,
+        tone: stage2Done ? selectedTone : undefined,
+        modelUsed: stage2Done ? 'google/gemma-4-31b-it:free' : undefined,
+
+        // Final values from editor
+        finalCaption: caption,
+        finalHashtags: hashtags,
+      }
+
+      const response = await fetch('/api/hashtags/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to save generation')
+      }
+
+      toast.success('✨ Generation saved to library!')
+    } catch (error: any) {
+      console.error('Save error:', error)
+      toast.error(error.message || 'Failed to save generation')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const canGenerate = selectedImage && !isGenerating
@@ -303,6 +383,33 @@ export function GeneratorPage({ userName, userHandle, userAvatar }: GeneratorPag
                 platform={selectedPlatform}
                 isGenerating={isGenerating}
               />
+
+              {/* Save Generation Card */}
+              <Card className="overflow-hidden border-emerald-500/20 shadow-lg shadow-emerald-500/5">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
+                  <div className="space-y-0.5">
+                    <h4 className="font-semibold text-sm">Save to Content Library</h4>
+                    <p className="text-xs text-muted-foreground">Keep this generation to use on the content editor later</p>
+                  </div>
+                  <Button
+                    onClick={handleSaveGeneration}
+                    disabled={isSaving}
+                    className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-md transition-all duration-200"
+                  >
+                    {isSaving ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Generation
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
 
               {/* Live Preview */}
               <PostPreview
