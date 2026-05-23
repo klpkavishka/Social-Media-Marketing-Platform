@@ -115,8 +115,11 @@ export function EnhancedSignupForm({ onSubmit, isLoading = false, onSkip }: Enha
       {step === 2 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">What industry are you in?</label>
+            <label htmlFor="industry" className="block text-sm font-semibold text-foreground mb-2">What industry are you in?</label>
             <select
+              id="industry"
+              title="Industry"
+              aria-label="Industry"
               value={formData.industry}
               onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
               className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"

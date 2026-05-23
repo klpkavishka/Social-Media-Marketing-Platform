@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -14,15 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Plus, Trash2, Zap, Settings, Play, Info } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Zap, Settings, Play, Info, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useCreateWorkflow } from '@/lib/hooks/use-workflows'
-import { Badge } from '@/components/ui/badge'
+import { useWorkflow, useUpdateWorkflow } from '@/lib/hooks/use-workflows'
 import { WorkflowStatus } from '@/lib/types/workflow'
 
-export default function NewWorkflowPage() {
+export default function EditWorkflowPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const createWorkflow = useCreateWorkflow()
+  const { data: workflow, isLoading } = useWorkflow(params.id)
+  const updateWorkflow = useUpdateWorkflow()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -41,9 +42,30 @@ export default function NewWorkflowPage() {
     ],
   })
 
+  // Pre-populate data once query is successful
+  useEffect(() => {
+    if (workflow) {
+      setFormData({
+        name: workflow.name || '',
+        description: workflow.description || '',
+        status: workflow.status || WorkflowStatus.INACTIVE,
+        trigger: {
+          type: workflow.triggers?.type || '',
+          config: workflow.triggers?.config || {},
+        },
+        actions: Array.isArray(workflow.actions) && workflow.actions.length > 0
+          ? workflow.actions.map(action => ({
+              type: action.type || '',
+              config: action.config || {},
+            }))
+          : [{ type: '', config: {} }],
+      })
+    }
+  }, [workflow])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.trigger.type) {
       alert('Please select a trigger type.')
       return
@@ -57,16 +79,19 @@ export default function NewWorkflowPage() {
     setIsSubmitting(true)
 
     try {
-      await createWorkflow.mutateAsync({
-        name: formData.name,
-        description: formData.description,
-        status: formData.status,
-        triggers: formData.trigger,
-        actions: formData.actions,
+      await updateWorkflow.mutateAsync({
+        id: params.id,
+        data: {
+          name: formData.name,
+          description: formData.description,
+          status: formData.status,
+          triggers: formData.trigger,
+          actions: formData.actions,
+        },
       })
-      router.push('/dashboard/workflows')
+      router.push(`/dashboard/workflows/${params.id}`)
     } catch (error) {
-      console.error('Error creating workflow:', error)
+      console.error('Error updating workflow:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -111,22 +136,46 @@ export default function NewWorkflowPage() {
     })
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm font-medium">Fetching workflow details...</p>
+      </div>
+    )
+  }
+
+  if (!workflow) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6">
+        <Zap className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Workflow not found</h3>
+        <p className="text-muted-foreground mb-6 max-w-sm">
+          The workflow you are trying to edit does not exist or has been deleted.
+        </p>
+        <Link href="/dashboard/workflows">
+          <Button>Back to Workflows</Button>
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/workflows">
+        <Link href={`/dashboard/workflows/${params.id}`}>
           <Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-muted-foreground/20 hover:bg-muted transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-transparent">Create Workflow</h1>
-            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none px-2.5 py-0.5 text-xs font-semibold">New</Badge>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-transparent">Edit Workflow</h1>
+            <Badge className="bg-primary/10 text-primary border-none px-2.5 py-0.5 text-xs font-semibold">Settings</Badge>
           </div>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Set up automation pipelines for your marketing and publishing campaigns
+            Modify automation events, triggers, and sequences for this workflow
           </p>
         </div>
       </div>
@@ -142,7 +191,7 @@ export default function NewWorkflowPage() {
               Basic Information
             </CardTitle>
             <CardDescription>
-              Provide a clear name and objective description for this automation workflow
+              Update the workflow name and operational description
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5 pt-6">
@@ -171,7 +220,7 @@ export default function NewWorkflowPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm font-semibold">Initial Status</Label>
+              <Label htmlFor="status" className="text-sm font-semibold">Status</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
@@ -326,7 +375,7 @@ export default function NewWorkflowPage() {
                       type="number"
                       placeholder="100"
                       value={formData.trigger.config.minLikes || ''}
-                      onChange={(e) => updateTriggerConfig('minLikes', parseInt(e.target.value))}
+                      onChange={(e) => updateTriggerConfig('minLikes', e.target.value ? parseInt(e.target.value) : '')}
                       className="bg-background border-muted-foreground/20 h-9"
                     />
                   </div>
@@ -336,7 +385,7 @@ export default function NewWorkflowPage() {
                       type="number"
                       placeholder="10"
                       value={formData.trigger.config.minShares || ''}
-                      onChange={(e) => updateTriggerConfig('minShares', parseInt(e.target.value))}
+                      onChange={(e) => updateTriggerConfig('minShares', e.target.value ? parseInt(e.target.value) : '')}
                       className="bg-background border-muted-foreground/20 h-9"
                     />
                   </div>
@@ -554,13 +603,23 @@ export default function NewWorkflowPage() {
 
         {/* Submit */}
         <div className="flex gap-4 justify-end">
-          <Link href="/dashboard/workflows">
+          <Link href={`/dashboard/workflows/${params.id}`}>
             <Button type="button" variant="outline" className="h-11 px-6 rounded-md hover:bg-muted">
               Cancel
             </Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting} className="h-11 px-8 rounded-md bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-white font-medium shadow-md transition-all duration-300">
-            {isSubmitting ? 'Creating workflow...' : 'Create Workflow'}
+          <Button type="submit" disabled={isSubmitting} className="h-11 px-8 rounded-md bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-white font-medium shadow-md flex items-center gap-2 transition-all duration-300">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
       </form>

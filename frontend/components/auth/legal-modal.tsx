@@ -23,7 +23,10 @@ export function LegalModal({ type, isOpen, onClose }: LegalModalProps) {
             {isTerms ? 'Terms of Service' : 'Privacy Policy'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Close"
+            title="Close"
             className="p-1 hover:bg-muted rounded-lg transition-colors"
           >
             <X className="h-6 w-6" />
@@ -127,6 +130,7 @@ export function LegalModal({ type, isOpen, onClose }: LegalModalProps) {
         {/* Footer */}
         <div className="sticky bottom-0 border-t border-border bg-background p-6 flex gap-3">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors font-medium"
           >
